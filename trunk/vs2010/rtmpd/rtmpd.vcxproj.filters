@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="源文件\core">
+      <UniqueIdentifier>{4f09f4e4-5e9a-4dab-ab3d-98fada5fd296}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\rtmp">
+      <UniqueIdentifier>{8a098b91-be2d-4117-8f40-030fad4489f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\event">
+      <UniqueIdentifier>{90592475-3e57-41f1-bd11-70cf3d596116}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\http">
+      <UniqueIdentifier>{e956dbc2-6a9d-4c1d-bf88-39dcd778c9d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\os">
+      <UniqueIdentifier>{c01c676f-4488-458b-8f8f-4a8385c751dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\os\win32">
+      <UniqueIdentifier>{28effe86-38e7-4405-b58d-d71b87d81868}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\os\unix">
+      <UniqueIdentifier>{d70d7514-38b7-4164-8d5a-29551277e773}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\core\rtmp_amf.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_bytes.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_link.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_rbtree.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\win32\rtmp_alloc.c">
+      <Filter>源文件\os\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\win32\rtmp_event_select.c">
+      <Filter>源文件\os\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\win32\rtmp_shmem.c">
+      <Filter>源文件\os\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_cycle.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_handshake.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_error.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_log.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_time.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_conf.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_array.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\http\rtmp_http_module.c">
+      <Filter>源文件\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\event\rtmp_event_module.c">
+      <Filter>源文件\event</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_core_module.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_push_module.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\http\rtmp_hls_module.c">
+      <Filter>源文件\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\event\rtmp_event_timer.c">
+      <Filter>源文件\event</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_host_module.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_app.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_chunk.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_core_conf.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_connection.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\win32\rtmp_socket.c">
+      <Filter>源文件\os\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\win32\rtmp_atomic.c">
+      <Filter>源文件\os\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_session.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_core.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_send.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\rtmp_recv.c">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\core\rtmp_amf.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_bytes.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_link.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_rbtree.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\event\rtmp_event.h">
+      <Filter>源文件\event</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\os\rtmp_alloc.h">
+      <Filter>源文件\os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\os\rtmp_shmem.h">
+      <Filter>源文件\os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\os\win32\rtmp_win32_config.h">
+      <Filter>源文件\os\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\os\rtmp_config.h">
+      <Filter>源文件\os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_core.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_handshake.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_error.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_log.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_time.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_conf.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_array.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\event\rtmp_event_timer.h">
+      <Filter>源文件\event</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_app.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_host.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_chunk.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_core_conf.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_connection.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\os\rtmp_atomic.h">
+      <Filter>源文件\os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_session.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

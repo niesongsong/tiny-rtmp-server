@@ -1,0 +1,10 @@
+//  Microsoft Visual C++ 2008, -si4 -sp4, lib-atl.lnt lib-mfc.lnt lib-w32.lnt lib-wnt.lnt
+//  Standard lint options
+
+au-sm123.lnt au-ds.lnt
+co-msc100.lnt env-vc10.lnt
+lib-atl.lnt lib-mfc.lnt lib-w32.lnt lib-wnt.lnt
+options.lnt  -si4 -sp4
+include.lnt
+macro.lnt
+

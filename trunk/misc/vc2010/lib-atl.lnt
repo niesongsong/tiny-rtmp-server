@@ -1,0 +1,108 @@
+
+// These options were necessary to quietly process headers:
+// atlbase.h and atlcom.h
+
+// Gimpel Software would like to acknowledge Mike Diack and Simon Coghlans
+// for providing the bulk of the options in this file
+
+
+// NOTE: That turning off and on lint messages from system headers must be done
+// using -save, -restore. (e.g., -save -e... <code>  -restore )
+
+// These are principally for ATL problems
+-elib(618)             // unusual order 'const static ...'
+-elib(1512)
+-elib(1070)
+-elib(1015)
+-elib(1054)
+
+-printf(1,::AtlTrace)
+
+// Make LINT moan less about typical smart pointer creations
+-emacro(655,CLSCTX_SERVER)
+
+// Tweaks to work around some of the fall out of using OLE, ATL and COM macros
+-esym(550,_acp)
+-esym(550,_lpa)
+-esym(550,_convert)
+-esym(550,_lpw)
+-esym(522,_acp)
+-esym(522,_lpa)
+-esym(1512,CThreadLocalObject)
+-esym(1512,CProcessLocalObject)
+-esym(628,ATL::GetDefaultThreads)
+-esym(534,CComControlBase::FireViewChange)
+-esym(1748,IUnknown)
+-esym(1928,CComObjectRootEx)
+-esym(665,ATL::ATLTRY) // unparenthesized macro parameter
+-esym(666,COLUMN_ENTRY)
+-esym(666,_COLUMN_ENTRY_CODE)
+
+// Fix all variants of member functions GetClsid (COM generated)
+// by use of wildcard and class scope operator to cover all classes!
+-esym(1762,*::GetClsid)
+
+-esym(955,MIDL_user_allocate)
+-esym(1512,_CIP)
+-esym(1512,_CIP<<1>,<2>>)
+-emacro(732,OLE2T)
+-emacro(732,OLE2CT)
+-emacro(1509,CComObjectRootEx)
+-esym(1509,CComObjectRootEx)
+-emacro(1511,DECLARE_PROTECT_FINAL_CONSTRUCT)
+-emacro(1511,BEGIN_COM_MAP)
+-emacro(613,BEGIN_COM_MAP)
+-emacro(737,BEGIN_COM_MAP)
+-emacro(785,END_OBJECT_MAP)
+-emacro(1511,BEGIN_MSG_MAP)
+-emacro(618,BEGIN_COM_MAP)
+-emacro(522,BEGIN_MSG_MAP)
+-emacro(506,END_MSG_MAP)
+-emacro(534,DECLARE_PROTECT_FINAL_CONSTRUCT)
+
+// Stuff for Active X and wizard generated code etc.
+-emacro(1516,DECLARE_MESSAGE_MAP)
+-emacro(1516,DECLARE_DISPATCH_MAP)
+-emacro(1516,DECLARE_EVENT_MAP)
+-emacro(1516,DECLARE_NOT_AGGREGATABLE)
+-emacro(786,DISP_FUNCTION)
+-emacro(1511,DECLARE_DYNCREATE)
+-emacro(665,DECLARE_VIEW_STATUS)
+-emacro(665,VIEWSTATUS_SOLIDBKGND)
+-emacro(665,VIEWSTATUS_OPAQUE)
+-esym(666,COLUMN_ENTRY)
+-esym(666,_COLUMN_ENTRY_CODE)
+-emacro(78,COLUMN_ENTRY)
+-emacro(578,BEGIN_COLUMN_MAP)
+-emacro(754,BEGIN_COLUMN_MAP)
+-emacro(666,COLUMN_ENTRY)
+-emacro(666,_COLUMN_ENTRY_CODE)
+-emacro(413,COLUMN_ENTRY)
+-emacro(530,COLUMN_ENTRY)
+-emacro(732,COLUMN_ENTRY)
+-emacro(831,COLUMN_ENTRY)
+-emacro(746,COLUMN_ENTRY)
+-emacro(1046,COLUMN_ENTRY)
+-emacro(1055,COLUMN_ENTRY)
+
+// NOTE: This slightly convoluted format ({} and --) ensures that the
+// multiple variables created and stubbed by this macro are all handled
+// sensibly including in the scope that follows (typically the use of
+// an OLE2T macro). Use this rather than the less potent -emacro(522,USES_CONVERSION)
+--emacro({522},USES_CONVERSION)
+
+// NOTE: For some of the really convoluted ATL/COM macros etc, you need to use
+// the more powerful form again...
+--emacro({1773},IMPLEMENT_DYNCREATE)
+--emacro({955},STDMETHOD)
+--emacro({1762},BEGIN_COM_MAP)
+--emacro({1776},OLESTR)
+
+// For the string types we can safely use with TRACE etc, turn off 437
+-esym(437,CString)
+-esym(437,CComBSTR)
+
+//
++dATLASSERT=__assert // lock in the define of ASSERT to be the builtin function
+
+//End of tweaks

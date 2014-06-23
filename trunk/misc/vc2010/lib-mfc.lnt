@@ -1,0 +1,209 @@
+
+//  lib-mfc.lnt
+//  Library Options File for the Microsoft Foundation Class library
+//
+//  Other options useful for MFC have been placed in the
+//  compiler options files for the Microsoft C compiler (co-msc.lnt).
+//
+
+-elib(570)      // loss of sign in afxdisp.h
+-elib(579)      // bad type preceding ,... in afxdisp.h
+-elib(648)      // overflow in arithmetic operation in moniker.h
+-elib(659)      // nothing follows '}' in variant.h
+-elib(723)      // suspicious use of '=' in defining PURE
+-elib(726)      // Extraneous comma
+-elib(763)      // Repeated declarations
+-elib(773)      // #define NAME (SHORT)-2 causes problems
+-elib(1411)     // hiding a virtual function with a different signature
+-elib(1509)     // base class not virtual
+-elib(1516)     // Data member hiding inherited member
+-elib(1725)     // class member is a reference
+-elib(1727)     // inline function not previously defined inline
+
+-esym(767,AFXAPP_DATA)  // macro may be defined differently
+-esym(1511,*::On*)      // Message handlers typically begin with 'On'
+			// and they are not virtual and they hide other
+			// identically named members in base classes
+-esym(534,wsprintf*,*::On*)   // functions whose return
+			// values are ignored, add to this as needed ...
+-esym(534,AfxMessageBox)   // like this
+-esym(534,CArchive::operator<<,CArchive::operator>>)  // and these ...
+-esym(534, CObList::AddTail, CDC::MoveTo, CDC::LineTo )
+-esym(534, CWnd::SetCapture, ReleaseCapture )
+
+-esym(516,DISP_PROPERTY_NOTIFY)
+-esym(767,lstrcpyn,FindResource)  // UNICODE redefines some macros
+-esym(1512,CThreadLocalObject)  // destructor is not virtual
+-esym(1512,CProcessLocalObject)  // destructor is not virtual
+-esym(578,system) // declaration of 'system' hides 'system(const char *)' (afx.h)
+-esym(1712,CControlDataSource)
+-esym(763,CDaoDatabase)
+-esym(1511,CWnd::OnHelpInfo)
+-esym(1735,*::OnPrepareDC)
+-esym(1023,ATL::AfxTrace)
+-esym(569,*::InvokeHelper)
+-esym(1746,*::OnLButton*)
+-esym(1746,*::OnRButton*)
+-esym(1746,*::OnMouseMove)
+-esym(550,_convert)
+-esym(550,_lpw)
+-esym(550,_acp)
+-esym(550,_lpa)
+-esym(1769,COleControlModule)
+-esym(1752,CException)
+-esym(1509,COleDispatchDriver)
+-esym(1928,COleDispatchDriver)
+-esym(1932,CCmdTarget)          // Base class is not abstract
+-esym(1932,CColorDialog)        // Base class is not abstract
+-esym(1932,CDaoDatabase)        // Base class is not abstract
+-esym(1932,CDaoRecordset)       // Base class is not abstract
+-esym(1932,CDialog)             // Base class is not abstract
+-esym(1932,CDocManager)         // Base class is not abstract
+-esym(1932,CFormView)           // Base class is not abstract
+-esym(1932,CObject)             // Base class is not abstract
+-esym(1932,CEdit)               // Base class is not abstract
+-esym(1932,CEditView)           // Base class is not abstract
+-esym(1932,CFileDialog)         // Base class is not abstract
+-esym(1932,CFrameWnd)           // Base class is not abstract
+-esym(1932,CListCtrl)           // Base class is not abstract
+-esym(1932,CListView)           // Base class is not abstract
+-esym(1932,CMDIChildWnd)        // Base class is not abstract
+-esym(1932,CMDIFrameWnd)        // Base class is not abstract
+-esym(1932,CMenu)               // Base class is not abstract
+-esym(1932,COleIPFrameWnd)      // Base class is not abstract
+-esym(1932,CPageSetupDialog)    // Base class is not abstract
+-esym(1932,CPropertyPage)       // Base class is not abstract
+-esym(1932,CNoTrackObject)      // Base class is not abstract
+-esym(1932,CException)          // Base class is not abstract
+-esym(1932,COleClientItem)      // Base class is not abstract
+-esym(1932,COleControlModule)   // Base class is not abstract
+-esym(1932,COleDataSource)      // Base class is not abstract
+-esym(1932,COleDispatchDriver)  // Base class is not abstract
+-esym(1932,COleDocIPFrameWnd)   // Base class is not abstract
+-esym(1932,COleDocument)        // Base class is not abstract
+-esym(1932,COleObjectFactory)   // Base class is not abstract
+-esym(1932,COlePropertyPage)    // Base class is not abstract
+-esym(1932,CDocObjectServer)    // Base class is not abstract
+-esym(1932,CDocument)           // Base class is not abstract
+-esym(1932,CPropertySheet)      // Base class is not abstract
+-esym(1932,CRectTracker)        // Base class is not abstract
+-esym(1932,CSplitterWnd)        // Base class is not abstract
+-esym(1932,CStatic)             // Base class is not abstract
+-esym(1932,CTreeView)           // Base class is not abstract
+-esym(1932,CWinApp)             // Base class is not abstract
+-esym(1932,CWnd)                // Base class is not abstract
+-esym(1932,CHtmlView)           // Base class is not abstract
+
+
+-emacro(   19, _T ) // there is a spurious semi-colon in the use of macro _T in some locations
+-emacro(   64, BEGIN_EVENTSINK_MAP )    // Type Mismatch
+-emacro(   64, BEGIN_MESSAGE_MAP )      // Type Mismatch
+-emacro(   64, END_EVENTSINK_MAP )      // Type Mismatch
+-emacro(   64, END_MESSAGE_MAP )        // Type Mismatch
+-emacro(   64, IMPLEMENT_DYNCREATE )    // Type Mismatch
+-emacro(   64, ON_COMMAND* )            // Type Mismatch
+-emacro(   64, ON_MESSAGE )             // Type Mismatch
+-emacro(   64, ON_UPDATE_COMMAND_UI* )  // Type Mismatch
+-emacro(   64, ON_WM_* )                // Type Mismatch
+-emacro(   78, DISP_PROPERTY_NOTIFY )   // typedef'ed name used in expression
+-emacro(   78, INTERFACE_AGGREGATE )    // typedef'ed name used in expression
+-emacro(   78, INTERFACE_PART )         // typedef'ed name used in expression
+-emacro(   78, METHOD_PROLOGUE )        // typedef'ed name used in expression
+-emacro(   78, METHOD_PROLOGUE_EX )     // typedef'ed name used in expression
+-emacro(  415, _AFX_FP_SEG )            // access of out-of-bounds pointer
+-emacro(  506, TRACE )                  // Constant value Boolean
+-emacro(  516, DISP_PROPERTY_NOTIFY )   // Argument type conflict
+-emacro(  516, INTERFACE_AGGREGATE )    // Argument type conflict
+-emacro(  516, INTERFACE_PART )         // Argument type conflict
+-emacro(  516, METHOD_PROLOGUE_EX )     // Argument type conflict
+-emacro(  522, METHOD_PROLOGUE )        // Expected side effects
+-emacro(  522, METHOD_PROLOGUE_EX )     // Expected side effects
+-emacro(  522, USES_CONVERSION )        // Expected side effects
+-emacro(  522, IMPLEMENT_* )            // expect void,  assignment,  etc.
+-emacro(  530, DISP_PROPERTY_NOTIFY )   // Symbol not initialized
+-emacro(  530, INTERFACE_PART )         // Symbol not initialized
+-emacro(  550, USES_CONVERSION )        // Symbol not accessed
+-emacro(  648, ON_NOTIFY )              // unusual arithmetic in this macro
+-emacro(  651, END_EVENTSINK_MAP )      // Potentially Confusing Initializer
+-emacro(  651, ON_EVENT )               // does not fully brace initializer items
+-emacro(  725, END_PROPPAGEIDS )        // Expected positive indentation
+-emacro(  732, DISP_PROPERTY_NOTIFY )   // Loss of sign
+-emacro(  732, INTERFACE_AGGREGATE )    // Loss of sign
+-emacro(  732, INTERFACE_PART )         // Loss of sign
+-emacro(  732, OLE2CT )                 // Loss of sign
+-emacro(  732, T2COLE )                 // Loss of sign
+-emacro(  746, DISP_PROPERTY_NOTIFY )   // Not using prototype
+-emacro(  746, INTERFACE_PART )         // Not using prototype
+-emacro(  765, BEGIN_PROPPAGEIDS )      // Could be made static
+-emacro(  774, PROPPAGEID )             // Boolean always evaluates to true/false
+-emacro(  785, IMPLEMENT_* )            // not enough initializers
+-emacro(  786, DISP_FUNCTION )          // typedef'ed name used in expression6
+-emacro(  950, DECLARE_DYNCREATE )      // non-ANSI reserved word
+-emacro( 1023, TRACE )                  // Ambiguous call
+-emacro( 1039, IMPLEMENT_DYNCREATE )    // Not a member of class
+-emacro( 1055, DISP_PROPERTY_NOTIFY )   // Undeclared function
+-emacro( 1055, INTERFACE_PART )         // Undeclared function
+-emacro( 1057, DISP_PROPERTY_NOTIFY )   // Member cannot be used without an object
+-emacro( 1057, INTERFACE_AGGREGATE )    // Member cannot be used without an object
+-emacro( 1057, INTERFACE_PART )         // Member cannot be used without an object
+-emacro( 1057, METHOD_PROLOGUE )        // Member cannot be used without an object
+-emacro( 1057, METHOD_PROLOGUE_EX )     // Member cannot be used without an object
+-emacro( 1502, IMPLEMENT_* )            // object w/o data members
+-emacro( 1516, DECLARE_* )              // member hides inherited member
+-emacro( 1773, IMPLEMENT_* )            // casting away const
+-emacro( 1773, DYNAMIC_DOWNCAST )       // Attempt to cast away const
+-emacro( 1773, ON_REGISTERED_MESSAGE )  // Attempt to cast away const
+-emacro( 1773, RUNTIME_CLASS )          // Attempt to cast away const
+
+-lobbase(stdafx.lob)              // use stdafx.lob as base for later lobs
+
+-e123         // variable previously defined as macro with arguments
+-e1023        // Ambiguous call
+-e1703        // Function arbitrarily selected.
+-e641         // converting enums to ints seems to be standard practice
+-e655         // bit-wise operations on enums also is standard practice
+-e1511        // members hiding members (also standard practice)
+-e1736        // redundant access specifiers in generated code
+-e1923        // cites when #define's can be converted to const declarations
+	      // unfortunately resource.h has many of these.  Alternatively,
+	      // make resource.h a library file (+libh) and use -elib(1923)
+
+-d__SW_BM         // Watcom requires the multithread flag be set for MFC
+-d__SW_ML         // Watcom requires large model for MFC
+-function( operator new(r) )  // operator new never returns NULL.
+-function( operator new[](r) ) // operator new[] never returns NULL.
+--unew    // keep new from becoming #define'd.  It's defined to be
+	  // DEBUG_NEW which is defined to be new(arg,arg) which is OK for
+	  // regular new's but array new's come to grief.  This is because
+	  // there is no declaration given for operator new[](arg,arg,arg).
+-function( operator delete, CObject::operator delete )
+-function( operator delete[], CObject::operator delete[] )
+
++dASSERT=__assert    // lock in the define of ASSERT to be the builtin function
+-esym(1055,__assert) // the built-in is undeclared
+-esym(526,__assert)  // and not defined either.
+-esym(516,__assert)  // arguments may vary.
+-esym(534,__assert)  // the return value is ignored
+-esym(628,__assert)  // and no argument information given
+-esym(746,__assert)  // and no formal prototype provided
+		     // otherwise __assert() is an 'ideal' assert function.
+
+// the following are required for .dll processing
+-efunc(571,_tcsnextc)  // suspicious cast
+-efunc(732, CSimpleList::CSimpleList) // loss of sign
+-efunc(732, CSimpleList::Construct)   // loss of sign
+-efunc(1023,ATL::AfxTrace)            // ambiguous
+
+-elib(1510) // afxdisp.h base class 'tagVARIANT' has no destructor
+-elib(783)  // Line does not end with new-line
+-elib(767)  // macro INTERFACE was defined differently (richole.h && olectl.h)
+-elib(745)  // function has no specific type or class
+
+
+-elibsym(1512)    // base class destructor is non-virtual
+-elibsym(1932)    // base classes can be non-abstract
+
+-function( exit, AfxAssertFailedLine )  // special assert for MFC
+
++libh(resource.h) // resource.h is considered library
++libh(*AFXIMPL.h) // so are all these

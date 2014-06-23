@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\core\rtmp_amf.c" />
+    <ClCompile Include="..\..\src\core\rtmp_array.c" />
+    <ClCompile Include="..\..\src\core\rtmp_bytes.c" />
+    <ClCompile Include="..\..\src\core\rtmp_conf.c" />
+    <ClCompile Include="..\..\src\core\rtmp_connection.c" />
+    <ClCompile Include="..\..\src\core\rtmp_error.c" />
+    <ClCompile Include="..\..\src\core\rtmp_link.c" />
+    <ClCompile Include="..\..\src\core\rtmp_log.c" />
+    <ClCompile Include="..\..\src\core\rtmp_rbtree.c" />
+    <ClCompile Include="..\..\src\core\rtmp_recv.c" />
+    <ClCompile Include="..\..\src\core\rtmp_send.c" />
+    <ClCompile Include="..\..\src\core\rtmp_time.c" />
+    <ClCompile Include="..\..\src\event\rtmp_event_module.c" />
+    <ClCompile Include="..\..\src\event\rtmp_event_timer.c" />
+    <ClCompile Include="..\..\src\http\rtmp_hls_module.c" />
+    <ClCompile Include="..\..\src\http\rtmp_http_module.c" />
+    <ClCompile Include="..\..\src\os\win32\rtmp_alloc.c" />
+    <ClCompile Include="..\..\src\os\win32\rtmp_atomic.c" />
+    <ClCompile Include="..\..\src\os\win32\rtmp_event_select.c" />
+    <ClCompile Include="..\..\src\os\win32\rtmp_shmem.c" />
+    <ClCompile Include="..\..\src\os\win32\rtmp_socket.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_app.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_chunk.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_core.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_core_conf.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_cycle.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_handshake.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_push_module.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_host_module.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_session.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\core\rtmp_amf.h" />
+    <ClInclude Include="..\..\src\core\rtmp_array.h" />
+    <ClInclude Include="..\..\src\core\rtmp_bytes.h" />
+    <ClInclude Include="..\..\src\core\rtmp_conf.h" />
+    <ClInclude Include="..\..\src\core\rtmp_connection.h" />
+    <ClInclude Include="..\..\src\core\rtmp_error.h" />
+    <ClInclude Include="..\..\src\core\rtmp_link.h" />
+    <ClInclude Include="..\..\src\core\rtmp_log.h" />
+    <ClInclude Include="..\..\src\core\rtmp_rbtree.h" />
+    <ClInclude Include="..\..\src\core\rtmp_time.h" />
+    <ClInclude Include="..\..\src\event\rtmp_event.h" />
+    <ClInclude Include="..\..\src\event\rtmp_event_timer.h" />
+    <ClInclude Include="..\..\src\os\rtmp_alloc.h" />
+    <ClInclude Include="..\..\src\os\rtmp_atomic.h" />
+    <ClInclude Include="..\..\src\os\rtmp_config.h" />
+    <ClInclude Include="..\..\src\os\rtmp_shmem.h" />
+    <ClInclude Include="..\..\src\os\win32\rtmp_win32_config.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_app.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_chunk.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_core.h" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_core_module.c">
+      <FileType>CppHeader</FileType>
+    </ClCompile>
+    <ClInclude Include="..\..\src\rtmp\rtmp_core_conf.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_handshake.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_host.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_session.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{514969DE-2DE6-412C-83CC-58A1F340D837}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>rtmpd</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src\os;..\..\src\os\win32;..\..\src\event;..\..\src\core;..\..\librtmp\include;..\include;..\..\src\rtmp;..\os;..\os\win32</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\librtmp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>librtmp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

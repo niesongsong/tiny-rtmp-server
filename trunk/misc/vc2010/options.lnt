@@ -1,0 +1,28 @@
+// Please note -- this is a representative set of error suppression
+//                options.  Please adjust to suit your own policies
+//                See  manual (chapter LIVING WITH LINT)
+//                for further details.
+
+-e720					  // allow direct test of assignment
+-e502 -e713 -e737 -eau  // don't report on signed/unsigned mismatches
+-e734                   // allow sub-integer loss of information
+-e701 -e703             // shifting int left is OK
+-e718                   // allow calls to undeclared C functions
+-e746                   // allow calls w/o prototypes in C.
+-e783
+-e900
+-e952
+-e818
+-e413
+-e755
+-e714
+-e534
+-e757
+-e768
+-e756
+-e1904
+-e1924
+-e717
+-e1784 //in cpp previously declared as "C"
++fqb
+-e801

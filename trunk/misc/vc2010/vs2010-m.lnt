@@ -1,0 +1,348 @@
+
+
+
+
+
+
+
+// This output is generated like so:
+//
+//    cl /EP /C [X] vs2010-m.cpp  >vs2010-m.lnt
+//
+// ... where [X] is the list of options passed to the compiler to build
+// your project and "vs2010-m.lnt" is a suggested name.
+//
+// The output is a sequence of macro definition options that should be
+// passed to Lint.  This will configure Lint's preprocessor to have the
+// same set implicitly-defined macro definitions that the Microsoft
+// compiler assumes for a given build configuration.
+//
+// If you want to lint with different build configurations, you may want
+// to use a naming convention to identify the build configuration to which
+// the output corresponds (e.g. "win32_debug-implicit.lnt").  Note that
+// the filename should end in ".lnt" so that Lint sees it as a file
+// containing command arguments.
+//
+// We recommend the use of "/EP /C" instead of "/E" because it suppresses
+// #line directives and includes documentation for each active macro, so
+// the output is ready to use as a well-formed Lint options file.
+//
+// For convenience, descriptions of macros have been copied from
+// Microsoft's online documentation for Visual Studio 2010.
+//
+// Note: macros whose expansions depend on conditions at the point of use
+// (like __FUNCSIG__, __COUNTER__, etc.) are deliberately omitted.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    -d_CPPRTTI{1}
+    // 
+    // Defined for code compiled with /GR (Enable Run-Time Type
+    // Information).
+    // 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    -d_INTEGRAL_MAX_BITS{64}
+    // 
+    // Reports the maximum size (in bits) for an integral type.
+    // 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    -d_M_IX86{600}
+    // 
+    // Defined for x86 processors. See the Values for _M_IX86 table below
+    // for more information. This is not defined for x64 processors.
+    // 
+
+
+
+
+
+
+
+
+
+
+    -d_M_IX86_FP{0}
+    // 
+    // Expands to a value indicating which /arch compiler option was used:
+    // 
+    // 0 if /arch was not used.
+    // 
+    // 1 if /arch:SSE was used.
+    // 
+    // 2 if /arch:SSE2 was used.
+    // 
+    // See /arch (Minimum CPU Architecture) for more information.
+    // 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    -d_MSC_BUILD{1}
+    // 
+    // Evaluates to the revision number component of the compiler's
+    // version number. The revision number is the fourth component of the
+    // period-delimited version number. For example, if the version number
+    // of the Visual C++ compiler is 15.00.20706.01, the _MSC_BUILD macro
+    // evaluates to 1.
+    // 
+
+
+
+    -d_MSC_EXTENSIONS{1}
+    // 
+    // This macro is defined when you compile with the /Ze compiler option
+    // (the default). Its value, when defined, is 1.
+    // 
+
+
+
+    -d_MSC_FULL_VER{160030319}
+    // 
+    // Evaluates to the major, minor, and build number components of the
+    // compiler's version number. The major number is the first component
+    // of the period-delimited version number, the minor number is the
+    // second component, and the build number is the third component. For
+    // example, if the version number of the Visual C++ compiler is
+    // 15.00.20706.01, the _MSC_FULL_VER macro evaluates to 150020706.
+    // Type cl /? at the command line to view the compiler's version
+    // number.
+    // 
+
+
+
+    -d_MSC_VER{1600}
+    // 
+    // Evaluates to the major and minor number components of the
+    // compiler's version number. The major number is the first component
+    // of the period-delimited version number and the minor number is the
+    // second component.
+    // 
+    // For example, if the version number of the Visual C++ compiler is
+    // 15.00.20706.01, the _MSC_VER macro evaluates to 1500.
+    // 
+    // In Visual Studio 2010, _MSC_VER is defined as 1600.
+    // 
+
+
+
+
+
+
+
+
+
+
+    -d_MT{1}
+    // 
+    // Defined when /MD or /MDd (Multithreaded DLL) or /MT or /MTd
+    // (Multithreaded) is specified.
+    // 
+
+
+
+    -d_NATIVE_WCHAR_T_DEFINED{1}
+    // 
+    // Defined when /Zc:wchar_t is used.
+    // 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    -d_WCHAR_T_DEFINED{1}
+    // 
+    // Defined when /Zc:wchar_t is used or if wchar_t is defined in a
+    // system header file included in your project.
+    // 
+
+
+
+    -d_WIN32{1}
+    // 
+    // Defined for applications for Win32 and Win64. Always defined.
+    // 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /**** Undocumented implicitly-defined macros follow ****/
+
+
+    -d_NATIVE_NULLPTR_SUPPORTED{1}
+
+
+
+
+
+
+
+
+
+
+
+
+

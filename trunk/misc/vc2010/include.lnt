@@ -1,0 +1,17 @@
+//include path
+//VC include 
+-iD:/vs2010/VC/include
+-iD:/vs2010/VC/atlmfc/include
+
+//windows SDK include
+-i"C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Include"
+
+-i"src/core"
+-i"src/event"
+-i"src/os"
+-i"src/os/win32"
+-i"objs"
+-i"src/http"
+-i"src/rtmp"
+
+-i"vs2010/include"
