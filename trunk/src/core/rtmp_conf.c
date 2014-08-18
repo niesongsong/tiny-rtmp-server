@@ -22,7 +22,6 @@ struct rtmp_conf_buf_s {
 };
 
 static rtmp_conf_t* rtmp_conf_parse_file(char *file,mem_pool_t *pool,link_t *parent);
-void rtmp_dump_conf(rtmp_conf_t *conf);
 
 #ifdef HAVE_DEBUG
 
@@ -488,6 +487,7 @@ void rtmp_dump_conf(rtmp_conf_t *conf)
     rtmp_dump_conf_core(&conf->h);
 }
 
+
 #endif
 
 int32_t rtmp_conf_parse(rtmp_cycle_t *cycle)
@@ -501,7 +501,7 @@ int32_t rtmp_conf_parse(rtmp_cycle_t *cycle)
     if (conf) {
         cycle->conf = conf;
 
-#ifdef HAVE_DEBUG
+#if 0
         rtmp_dump_conf(conf);
 #endif
 
@@ -513,7 +513,7 @@ int32_t rtmp_conf_parse(rtmp_cycle_t *cycle)
 
 rtmp_conf_t *rtmp_get_conf(rtmp_conf_t *conf,char *name,int type)
 {
-    link_t       *next,*head,*first;
+    link_t       *next,*head;
     rtmp_conf_t  *pconf;
     char        **word;
 
@@ -523,11 +523,9 @@ rtmp_conf_t *rtmp_get_conf(rtmp_conf_t *conf,char *name,int type)
 
     if ((type == GET_CONF_NEXT) || (type == GET_CONF_CURRENT)) {
         head = & conf->h;
-        first = head;
 
     } else if ((type == GET_CONF_CHILD) && (conf->v.next)) {
         head = & (struct_entry(conf->v.next,rtmp_conf_t,v))->h;
-        first = head;
 
     } else {
         return NULL;

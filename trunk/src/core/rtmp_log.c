@@ -51,7 +51,7 @@ void rtmp_log_core(const char *func,long line, int level,
     va_list ap;
     time_t t;
     struct tm * now;
-    char ts[128],*old_name;
+    char ts[128];
     FILE *fp;
 
     if (level < RTMP_LOG_ERR || level > log_file.level) {
@@ -79,7 +79,24 @@ void rtmp_log_core(const char *func,long line, int level,
         } else {
 
 #ifndef HAVE_OS_WIN32
-            fp = fopen(log_file.file[level],"a+");
+            int l;
+
+            for (l = RTMP_LOG_ERR;l <= RTMP_LOG_DEBUG;l++) {
+                if (l == level) {
+                    continue;
+                }
+                if (strcmp(log_file.file[level],log_file.file[l]) == 0) {
+                    if (log_file.fp[l] != NULL) {
+                        fp = log_file.fp[l];
+                        break;
+                    }
+                }
+            }
+
+            if (fp == NULL) {
+                fp = fopen(log_file.file[level],"a+");
+            }
+
 #else
             fp = stdout;
 #endif
@@ -92,33 +109,21 @@ void rtmp_log_core(const char *func,long line, int level,
         log_file.fp[level] = fp;
     }
 
+#if 0
     fprintf(fp,"[%s][%s():%d][%s]%s\n",                 \
         ts,func,(int)line,                              \
         rtmp_log_level[level],log_str);
 
-    if (fseek(fp,0,SEEK_SET) < (int)log_file.maxsize) {
-        va_end(ap);
-        return;
-    }
+#else
 
-    fclose(fp);
-    log_file.fp[level] = NULL;
+    fprintf(fp,"[%s][%s]%s\n",                 \
+        ts,rtmp_log_level[level],log_str);
 
-    old_name = (char *)mem_malloc(1024);
-    if (old_name == NULL) {
-        va_end(ap);
-        return ;
-    }
-    
-    sprintf(old_name,"%s.%04d%02d%02d%02d%02d%02d",     \
-        log_file.file[level],                           \
-        now->tm_year+1900,now->tm_mon+1,now->tm_mday,   \
-        now->tm_hour,now->tm_min,now->tm_sec);
-
-    rename(log_file.file[level],old_name);
-    free(old_name);
+#endif
 
     va_end(ap);
+
+    return;
 }
 
 int rtmp_log_init(int level,const char* logname)

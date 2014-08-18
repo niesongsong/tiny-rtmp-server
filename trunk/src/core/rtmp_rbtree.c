@@ -203,6 +203,7 @@ int rbt_insert(rbtree_t *T,rbnode_t *z,int ignore)
         z->p = y;
     }
     z->c = RBT_RED;
+
     _rbt_insert_fixup(T,z);
     return 0;
 }
@@ -323,6 +324,9 @@ int rbt_remove(rbtree_t *T,rbnode_t *z)
     } else {
         x->c = RBT_BLACK;
     }
+
+    z->p = z->l = z->r = NULL;
+
     return 0;
 }
 

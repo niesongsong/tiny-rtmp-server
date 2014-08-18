@@ -96,10 +96,9 @@ static int byte_write_big(const char *in,char *out,int l)
     return 0;
 }
 
-
 void byte_fill_random(char *buf,int size)
 {
-    while (--size > 0) {
+    while (size-- > 0) {
         buf[size] = (unsigned char)rand();
     }
 }

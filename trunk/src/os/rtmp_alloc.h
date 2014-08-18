@@ -32,18 +32,20 @@ struct mem_pool_s {
     size_t                max;
     mem_pool_t           *current;
     mem_pool_large_t    *large;
+    mem_buf_chain_t     *chain;
 };
 
 struct mem_buf_s {
     u_char    *buf;
-
     u_char    *last;
     u_char    *end;
 };
 
 struct mem_buf_chain_s {
-    uint32_t   num;
-    mem_buf_t *next;
+    mem_buf_t        chunk;
+    uint32_t         chunk_size;
+    uint32_t         locked;
+    mem_buf_chain_t *next;
 };
 
 #define mem_malloc                     malloc
@@ -53,9 +55,17 @@ struct mem_buf_chain_s {
 void *mem_alloc(size_t size);
 void *mem_calloc(size_t size);
 
+void *mem_prealloc(mem_pool_t *pool,void *ptr,size_t old,size_t new);
+void *mem_pcrealloc(mem_pool_t *pool,void *ptr,size_t old,size_t new);
+
 mem_pool_t *mem_create_pool(size_t size);
 void mem_destroy_pool(mem_pool_t *pool);
 void mem_reset_pool(mem_pool_t *pool);
+
+mem_buf_t* mem_buf_palloc(mem_pool_t *pool,mem_buf_t *buf,size_t size);
+mem_buf_t* mem_buf_pcalloc(mem_pool_t *pool,mem_buf_t *buf,size_t size);
+
+mem_buf_t* mem_buf_merge_chain(mem_buf_chain_t *chain,mem_pool_t *temp);
 
 void *mem_palloc(mem_pool_t *pool, size_t size);
 void *mem_pnalloc(mem_pool_t *pool, size_t size);
@@ -63,7 +73,12 @@ void *mem_pcalloc(mem_pool_t *pool, size_t size);
 void *mem_pmemalign(mem_pool_t *pool, size_t size, size_t alignment);
 int mem_pfree(mem_pool_t *pool, void *p);
 
-void *mem_palloc_buf(mem_pool_t *pool,size_t size);
-void *mem_pcalloc_buf(mem_pool_t *pool,size_t size);
+mem_buf_chain_t* mem_alloc_chain_link(mem_pool_t *pool);
+
+#define mem_free_chain_link(pool,cl) \
+    cl->next = pool->chain;          \
+    pool->chain = cl;
+
+char *mem_dup_str(char *src,mem_pool_t *pool);
 
 #endif

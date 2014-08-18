@@ -47,15 +47,13 @@
 #define amf3_byte_array             0x0d
 #define amf3_invalid                0xff
 
-
 #define amf_new_bool(b)         amf_new(amf_boolean,(uint32_t)b)
 #define amf_new_string(s,len)   amf_new(amf_string,(const char*)s,(int32_t)len)
 #define amf_new_number(n)       amf_new(amf_number,(double)n)
 #define amf_new_date(n,tz)      amf_new(amf_date,(double)n,(int32_t)tz)
 #define amf_new_object()        amf_new(amf_object)
+#define amf_new_ecma_array()    amf_new(amf_ecma_array)
 #define amf_new_null()          amf_new(amf_null)
-#define amf_new_object_end()    amf_new(amf_object_end)
-
 
 /*memory*/
 typedef void* (*amf_malloc)(size_t size,void *u);
@@ -63,6 +61,11 @@ typedef void  (*amf_free)(void *p,void *u);
 
 /*data types*/
 typedef void *   amf_data_t;
+
+char*   amf_get_string(amf_data_t *data);
+uint8_t amf_get_bool(amf_data_t *data);
+double  amf_get_number(amf_data_t *data);
+double  amf_get_date(amf_data_t *data);
 
 int amf_init(amf_malloc alloc,amf_free free,void *u);
 

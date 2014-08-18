@@ -13,9 +13,12 @@ extern rtmp_event_io_t event_io_epoll;
 #endif
 
 static void *rtmp_event_create_module(rtmp_cycle_t *cycle);
-static int32_t rtmp_event_init_cycle(rtmp_cycle_t *cycle);
-static int32_t rtmp_event_init_process(rtmp_cycle_t *cycle);
-static int32_t rtmp_event_eixt_cycle(rtmp_cycle_t *cycle);
+static int32_t rtmp_event_init_cycle(rtmp_cycle_t *cycle,
+    rtmp_module_t *module);
+static int32_t rtmp_event_init_process(rtmp_cycle_t *cycle,
+    rtmp_module_t *module);
+static int32_t rtmp_event_eixt_cycle(rtmp_cycle_t *cycle,
+    rtmp_module_t *module);
 
 int32_t event_io_accept_enable(rtmp_cycle_t *cycle);
 int32_t event_io_accept_disable(rtmp_cycle_t *cycle);
@@ -66,14 +69,15 @@ static void *rtmp_event_create_module(rtmp_cycle_t *cycle)
     return ctx;
 }
 
-static int32_t rtmp_event_init_cycle(rtmp_cycle_t *cycle)
+static int32_t rtmp_event_init_cycle(rtmp_cycle_t *cycle,
+    rtmp_module_t *module)
 {
     rtmp_event_ctx_t *ctx;
     rtmp_conf_t      *conf,*sconf;
     char            **word;
     uint32_t          conn;
 
-    ctx = rtmp_event_module.ctx;
+    ctx = module->ctx;
     if (ctx == NULL) {
         return RTMP_FAILED;
     }
@@ -102,7 +106,8 @@ static int32_t rtmp_event_init_cycle(rtmp_cycle_t *cycle)
 
 #ifdef HAVE_EVENT_EPOLL
         if (strcmp(word[1],"epoll") == 0) {
-            cconf->event_io = event_io_epoll;
+            ctx->use = EVENT_IO_EPOLL;
+            ctx->event_io = event_io_epoll;
         }
 #endif
 
@@ -134,7 +139,8 @@ static int32_t rtmp_event_init_cycle(rtmp_cycle_t *cycle)
     return RTMP_OK;
 }
 
-static int32_t rtmp_event_init_process(rtmp_cycle_t *cycle)
+static int32_t rtmp_event_init_process(rtmp_cycle_t *cycle,
+    rtmp_module_t *module)
 {
     rtmp_event_io_t         *io;
     rtmp_event_ctx_t        *ctx;
@@ -143,7 +149,7 @@ static int32_t rtmp_event_init_process(rtmp_cycle_t *cycle)
     rtmp_connection_t       *c;
     rtmp_event_t            *rev;
     
-    ctx = rtmp_event_module.ctx;
+    ctx = module->ctx;
 
     /*create timer tree*/
     rbt_init(&ctx->timers,rtmp_timer_compare);
@@ -175,7 +181,7 @@ static int32_t rtmp_event_init_process(rtmp_cycle_t *cycle)
             continue;
         }
 
-        if (rtmp_event_add(rev,EVENT_READ) != RTMP_OK) {
+        if (rtmp_event_add_conn(c) != RTMP_OK) {
             return RTMP_FAILED;
         }
     }
@@ -183,7 +189,8 @@ static int32_t rtmp_event_init_process(rtmp_cycle_t *cycle)
     return RTMP_OK;
 }
 
-static int32_t rtmp_event_eixt_cycle(rtmp_cycle_t *cycle)
+static int32_t rtmp_event_eixt_cycle(rtmp_cycle_t *cycle,
+    rtmp_module_t *module)
 {
     return RTMP_OK;
 }
@@ -195,10 +202,7 @@ uint32_t rtmp_event_add(rtmp_event_t *ev,int flag)
 
     ctx = rtmp_event_module.ctx;
 
-    if (ev->index != -1) {
-        rtmp_log(RTMP_LOG_WARNING,"event already!");
-        return RTMP_FAILED;
-    }
+    rtmp_log(RTMP_LOG_DEBUG,"add event:%p,%d",ev,flag);
 
     io = &ctx->event_io;
     if (io->io_add) {
@@ -215,10 +219,7 @@ uint32_t rtmp_event_delete(rtmp_event_t *ev,int flag)
 
     ctx = rtmp_event_module.ctx;
 
-    if (ev->index == -1) {
-        rtmp_log(RTMP_LOG_WARNING,"event already!");
-        return RTMP_FAILED;
-    }
+    rtmp_log(RTMP_LOG_DEBUG,"delete event:%p,%d",ev,flag);
 
     io = &ctx->event_io;
     if (io->io_del) {
@@ -303,7 +304,7 @@ void rtmp_event_poll(uint32_t msec)
     return ;
 }
 
-uint32_t rtmp_event_add_timer(rtmp_event_t *ev,uint16_t msec)
+uint32_t rtmp_event_add_timer(rtmp_event_t *ev,uint32_t msec)
 {
     rtmp_event_ctx_t *ctx;
 
@@ -312,16 +313,20 @@ uint32_t rtmp_event_add_timer(rtmp_event_t *ev,uint16_t msec)
     ev->timeout = 0;
 
     if (ev->timer_set == 1) {
+
         rbt_remove(&ctx->timers,&ev->timer);
         ev->timer_set = 0;
     }
 
+    
+    ev->timer.k = rtmp_current_msec + msec;
+
+    rtmp_log(RTMP_LOG_DEBUG,"add timer:%p value:%llu",ev,ev->timer.k);
+
     if (rbt_insert(&ctx->timers,&ev->timer,1) != 0) {
         return RTMP_FAILED;
     }
-    
     ev->timer_set = 1;
-    ev->timer.k = rtmp_current_msec + msec;
 
     return RTMP_OK;
 }
@@ -336,6 +341,8 @@ uint32_t rtmp_event_del_timer(rtmp_event_t *ev)
     if (!ev->timer_set) {
         return RTMP_FAILED;
     }
+
+    rtmp_log(RTMP_LOG_DEBUG,"delete timer:%p value:%llu",ev,ev->timer.k);
 
     rbt_remove(&ctx->timers,&ev->timer);
 
@@ -394,15 +401,17 @@ void rtmp_event_accept(rtmp_event_t *ev)
     socket_t            fd;
     rtmp_connection_t  *c,*client;
     struct sockaddr     addr;
-    struct sockaddr_in  *addr_in;
+    struct sockaddr_in *addr_in;
     socklen_t           socklen;
     int32_t             err;
     rtmp_listening_t   *ls;
     rtmp_cycle_t       *cycle;
+    rtmp_event_ctx_t   *ctx;
 
     c = ev->data;
     ls = c->listening;
     cycle = ls->cycle;
+    ctx = rtmp_event_module.ctx;
 
     do {
         socklen = sizeof(addr);
@@ -413,12 +422,12 @@ void rtmp_event_accept(rtmp_event_t *ev)
             err = sock_errno;
 
             if (err == ECONNABORTED) {
-                rtmp_log(RTMP_LOG_INFO,"client disconnect!");
+                rtmp_log(RTMP_LOG_INFO,"client aborted before accept()!");
                 continue;
             }
 
             if (err == SOCK_EAGAIN) {
-                rtmp_log(RTMP_LOG_INFO,"accept() not ready");
+                rtmp_log(RTMP_LOG_DEBUG,"accept() not ready");
             }
 
             if (err == SOCK_EMFILE || err == SOCK_ENFILE) {
@@ -432,6 +441,12 @@ void rtmp_event_accept(rtmp_event_t *ev)
 
         if (set_nonblocking(fd) != 0) {
             rtmp_log(RTMP_LOG_WARNING,"set nonblocking failed!");
+            closesocket(fd);
+            continue;
+        }
+
+        if (set_tcppush(fd) != 0) {
+            rtmp_log(RTMP_LOG_WARNING,"set_notcppush failed!");
             closesocket(fd);
             continue;
         }
@@ -456,9 +471,49 @@ void rtmp_event_accept(rtmp_event_t *ev)
             break;
         }
 
+        if (ctx->event_io.type == EVENT_IO_EPOLL) {
+            if (rtmp_event_add_conn(client) == (uint32_t)-1) {
+                rtmp_log(RTMP_LOG_WARNING,"rtmp_event_add_conn() failed!");
+                closesocket(fd);
+                return ;
+            }
+        }
+
         ls->handler(client);
-        
     } while (1);
 
     return ;
+}
+
+uint32_t rtmp_event_add_conn(rtmp_connection_t *c)
+{
+    rtmp_event_ctx_t    *ctx;
+    rtmp_event_io_t     *io;
+
+    ctx = rtmp_event_module.ctx;
+
+    rtmp_log(RTMP_LOG_DEBUG,"add connection:%p",c);
+
+    io = &ctx->event_io;
+    if (io->io_add_conn) {
+        return io->io_add_conn(io,c);
+    }
+
+    return RTMP_FAILED;
+}
+
+uint32_t rtmp_event_delete_conn(rtmp_connection_t *c)
+{
+    rtmp_event_ctx_t    *ctx;
+    rtmp_event_io_t     *io;
+
+    ctx = rtmp_event_module.ctx;
+    rtmp_log(RTMP_LOG_DEBUG,"delete connection:%p",c);
+
+    io = &ctx->event_io;
+    if (io->io_del_conn) {
+        return io->io_del_conn(io,c);
+    }
+
+    return RTMP_FAILED;
 }

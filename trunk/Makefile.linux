@@ -25,8 +25,6 @@ CORE_OBJS =	objs/core/rtmp_amf.o \
 	objs/core/rtmp_error.o \
 	objs/core/rtmp_link.o \
 	objs/core/rtmp_log.o \
-	objs/core/rtmp_send.o \
-	objs/core/rtmp_recv.o \
 	objs/core/rtmp_rbtree.o \
 	objs/core/rtmp_time.o \
 	objs/core/rtmp_connection.o \
@@ -36,6 +34,7 @@ CORE_OBJS =	objs/core/rtmp_amf.o \
 	objs/http/rtmp_http_module.o \
 	objs/os/unix/rtmp_alloc.o \
 	objs/os/unix/rtmp_shmem.o \
+	objs/os/unix/rtmp_socket.o\
 	objs/os/unix/rtmp_atomic.o \
 	objs/os/unix/rtmp_event_select.o \
 	objs/os/unix/rtmp_event_epoll.o \
@@ -45,7 +44,18 @@ CORE_OBJS =	objs/core/rtmp_amf.o \
 	objs/rtmp/rtmp_core_conf.o\
 	objs/rtmp/rtmp_core.o\
 	objs/rtmp/rtmp_session.o\
+	objs/rtmp/rtmp_handler.o\
+	objs/rtmp/rtmp_app.o\
+	objs/rtmp/rtmp_message.o\
+	objs/rtmp/rtmp_stream.o\
+	objs/rtmp/rtmp_live.o\
 	objs/rtmp/rtmp_handshake.o\
+	objs/rtmp/rtmp_chunk.o\
+	objs/rtmp/rtmp_send.o\
+	objs/rtmp/rtmp_connect.o\
+	objs/rtmp/rtmp_play.o\
+	objs/rtmp/rtmp_publish.o\
+	objs/rtmp/rtmp_recv.o
 
 #linker
 objs/bin/rtmpd: $(CORE_OBJS)
@@ -71,18 +81,6 @@ objs/core/rtmp_bytes.o:	$(CORE_DEPS) \
 	$(CC) -c $(CFLAGS) $(CORE_INCS) \
 		-o objs/core/rtmp_bytes.o \
 		src/core/rtmp_bytes.c
-
-objs/core/rtmp_send.o:	$(CORE_DEPS) \
-	src/core/rtmp_send.c
-	$(CC) -c $(CFLAGS) $(CORE_INCS) \
-		-o objs/core/rtmp_send.o \
-		src/core/rtmp_send.c
-
-objs/core/rtmp_recv.o:	$(CORE_DEPS) \
-	src/core/rtmp_recv.c
-	$(CC) -c $(CFLAGS) $(CORE_INCS) \
-		-o objs/core/rtmp_recv.o \
-		src/core/rtmp_recv.c
 
 objs/core/rtmp_conf.o:	$(CORE_DEPS) \
 	src/core/rtmp_conf.c
@@ -156,6 +154,12 @@ objs/os/unix/rtmp_alloc.o:	$(CORE_DEPS) \
 		-o objs/os/unix/rtmp_alloc.o \
 		src/os/unix/rtmp_alloc.c
 
+objs/os/unix/rtmp_socket.o:	$(CORE_DEPS) \
+	src/os/unix/rtmp_socket.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/os/unix/rtmp_socket.o \
+		src/os/unix/rtmp_socket.c
+
 objs/os/unix/rtmp_shmem.o:	$(CORE_DEPS) \
 	src/os/unix/rtmp_shmem.c
 	$(CC) -c $(CFLAGS) $(CORE_INCS) \
@@ -192,6 +196,24 @@ objs/rtmp/rtmp_core_module.o:	$(CORE_DEPS) \
 		-o objs/rtmp/rtmp_core_module.o \
 		src/rtmp/rtmp_core_module.c
 
+objs/rtmp/rtmp_live.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_live.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_live.o \
+		src/rtmp/rtmp_live.c
+
+objs/rtmp/rtmp_message.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_message.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_message.o \
+		src/rtmp/rtmp_message.c
+
+objs/rtmp/rtmp_stream.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_stream.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_stream.o \
+		src/rtmp/rtmp_stream.c
+
 objs/rtmp/rtmp_core_conf.o:	$(CORE_DEPS) \
 	src/rtmp/rtmp_core_conf.c
 	$(CC) -c $(CFLAGS) $(CORE_INCS) \
@@ -210,17 +232,65 @@ objs/rtmp/rtmp_handshake.o:	$(CORE_DEPS) \
 		-o objs/rtmp/rtmp_handshake.o \
 		src/rtmp/rtmp_handshake.c
 
+objs/rtmp/rtmp_handler.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_handler.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_handler.o \
+		src/rtmp/rtmp_handler.c
+
 objs/rtmp/rtmp_core.o:	$(CORE_DEPS) \
 	src/rtmp/rtmp_core.c
 	$(CC) -c $(CFLAGS) $(CORE_INCS) \
 		-o objs/rtmp/rtmp_core.o \
 		src/rtmp/rtmp_core.c
 
+objs/rtmp/rtmp_app.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_app.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_app.o \
+		src/rtmp/rtmp_app.c
+
+objs/rtmp/rtmp_play.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_play.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_play.o \
+		src/rtmp/rtmp_play.c
+
+objs/rtmp/rtmp_publish.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_publish.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_publish.o \
+		src/rtmp/rtmp_publish.c
+
+objs/rtmp/rtmp_connect.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_connect.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_connect.o \
+		src/rtmp/rtmp_connect.c
+
+objs/rtmp/rtmp_send.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_send.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_send.o \
+		src/rtmp/rtmp_send.c
+
+objs/rtmp/rtmp_recv.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_recv.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_recv.o \
+		src/rtmp/rtmp_recv.c
+
 objs/rtmp/rtmp_session.o:	$(CORE_DEPS) \
 	src/rtmp/rtmp_session.c
 	$(CC) -c $(CFLAGS) $(CORE_INCS) \
 		-o objs/rtmp/rtmp_session.o \
 		src/rtmp/rtmp_session.c
+
+objs/rtmp/rtmp_chunk.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_chunk.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_chunk.o \
+		src/rtmp/rtmp_chunk.c
 
 clean:
 	rm $(CORE_OBJS) -rf

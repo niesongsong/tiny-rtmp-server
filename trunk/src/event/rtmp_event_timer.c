@@ -23,6 +23,7 @@ void rtmp_event_timer_expire(rbtree_t *timer)
         ev = struct_entry(x,rtmp_event_t,timer);
 
         ev->timeout = 1;
+        ev->timer_set = 0;
 
         if (ev->handler) {
             ev->handler(ev);

@@ -18,10 +18,13 @@
 
 #define HAVE_USING_LEDIAN   1
 #define HAVE_OS_WIN32       1
+#define HAVE_EPOLL_STUB     1
 
 #define SOCK_EAGAIN         WSAEWOULDBLOCK
 #define SOCK_ENFILE         WSAEMFILE
 #define SOCK_EMFILE         WSAEMFILE
+#define SOCK_ERROR          (-1)
+#define SOCK_OK             (0)
 
 #ifndef inline
 #define inline __inline
@@ -44,6 +47,6 @@ typedef int     socklen_t;
 
 int set_nonblocking(socket_t s);
 int set_blocking(socket_t s);
-
+int set_tcppush(socket_t s);
 
 #endif

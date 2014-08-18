@@ -6,45 +6,22 @@
 #ifndef __RTMP_CORE_H_INCLUDED__
 #define __RTMP_CORE_H_INCLUDED__
 
-
-/*
-
-C -----> C0  C1 ----> S
-| <----- S0  S1 <---- |
-| <-----   S2   <-----|
-| ----->   C2   ----> | 
-
-*/
-
-#define RTMP_HANDSHAKE_FAILED         0  /*handshake failed*/
-
-#define RTMP_HANDSHAKE_SERVER_INIT    1  /*prepare*/
-#define RTMP_HANDSHAKE_SERVER_C0C1    2   /*recv c0c1*/
-#define RTMP_HANDSHAKE_SERVER_S0S1    3   /*send s0s1*/
-#define RTMP_HANDSHAKE_SERVER_S2      4   /*send s2*/
-#define RTMP_HANDSHAKE_SERVER_C2      5   /*recv c2*/
-#define RTMP_HANDSHAKE_SERVER_DONE    6
-
-#define RTMP_HANDSHAKE_CLIENT_INIT    7  /*prepare c0c1*/
-#define RTMP_HANDSHAKE_CLIENT_C0C1    8  /*send c0c1*/
-#define RTMP_HANDSHAKE_CLIENT_S0S1    9  /*recv s0s1*/
-#define RTMP_HANDSHAKE_CLIENT_S2     10  /*recv s2*/
-#define RTMP_HANDSHAKE_CLIENT_C2     11  /*send c2*/
-#define RTMP_HANDSHAKE_CLIENT_DONE   12
-
 typedef struct rtmp_cycle_s         rtmp_cycle_t;
 typedef struct rtmp_module_s        rtmp_module_t;
 typedef struct rtmp_listening_s     rtmp_listening_t;
 typedef struct rtmp_connection_s    rtmp_connection_t;
-
 typedef struct rtmp_session_s       rtmp_session_t;
-
 typedef struct rtmp_addr_port_s     rtmp_addr_port_t;
 typedef struct rtmp_addr_inet_s     rtmp_addr_inet_t;
 
 #define rtmp_abs(value)       (((value) >= 0) ? (value) : - (value))
 #define rtmp_max(val1, val2)  (((val1) < (val2)) ? (val2) : (val1))
 #define rtmp_min(val1, val2)  (((val1) > (val2)) ? (val2) : (val1))
+
+#define rtmp_array_size(x)    (sizeof(x)/sizeof((x)[0]))
+#define rtmp_hash(key, c)     ((uint32_t) key * 31 + c)
+
+#define rtmp_invaild_ptr      ((void*)(-1))
 
 #include "rtmp_array.h"
 
@@ -62,28 +39,37 @@ typedef struct rtmp_addr_inet_s     rtmp_addr_inet_t;
 #include "rtmp_event.h"
 #include "rtmp_event_timer.h"
 #include "rtmp_core_conf.h"
+#include "rtmp_chunk.h"
+#include "rtmp_message.h"
 #include "rtmp_host.h"
 #include "rtmp_app.h"
+#include "rtmp_protocol.h"
 #include "rtmp_handshake.h"
 #include "rtmp_session.h"
 #include "rtmp_connection.h"
+#include "rtmp_handler.h"
 
 struct rtmp_cycle_s {
     mem_pool_t        *pool;
-
+    mem_pool_t        *temp_pool;
     rtmp_conf_t       *conf;
     char              *conf_file;
         
     uint32_t           daemon;
     uint32_t           workers;
     uint32_t           max_conn;
+    uint32_t           out_queue;
 
     rtmp_connection_t *free_connections;
-    rtmp_event_t      *read_event;
-    rtmp_event_t      *write_event;
+    rtmp_connection_t *connections;
+
+    rtmp_event_t      *read_events;
+    rtmp_event_t      *write_events;
 
     array_t            ports;       /*rtmp_addr_port_t*/
     array_t            listening;   /*rtmp_listening_t*/
+    array_t            server_list; /*rtmp_host_t*/
+    array_t            msg_handler; /*rtmp_msg_handler_pt*/
 };
 
 struct rtmp_addr_port_s {
@@ -95,6 +81,7 @@ struct rtmp_addr_port_s {
 struct rtmp_addr_inet_s {
     struct sockaddr_in addr;
     array_t            hosts;   /* rtmp_host_t ** */
+    rtmp_addr_port_t  *port;
 };
 
 struct rtmp_module_s{
@@ -105,9 +92,9 @@ struct rtmp_module_s{
     void    *ctx;
 
     void*    (*create_module)(rtmp_cycle_t *cycle);
-    int32_t  (*init_cycle)(rtmp_cycle_t *cycle);
-    int32_t  (*init_forking)(rtmp_cycle_t *cycle);
-    int32_t  (*eixt_cycle)(rtmp_cycle_t *cycle);
+    int32_t  (*init_cycle)(rtmp_cycle_t *cycle,rtmp_module_t *m);
+    int32_t  (*init_forking)(rtmp_cycle_t *cycle,rtmp_module_t *m);
+    int32_t  (*eixt_cycle)(rtmp_cycle_t *cycle,rtmp_module_t *m);
 };
 
 rtmp_cycle_t* rtmp_init_cycle();
@@ -118,6 +105,30 @@ int32_t rtmp_client_handshake(rtmp_session_t *session);
 
 int32_t rtmp_server_handshake_done(rtmp_session_t *session);
 int32_t rtmp_client_handshake_done(rtmp_session_t *session);
+
+mem_buf_chain_t* rtmp_core_alloc_chain(rtmp_session_t *session, 
+    mem_pool_t *pool,int32_t chunk_size);
+
+void rtmp_core_lock_chain(mem_buf_chain_t *chain);
+
+void rtmp_core_free_chain(rtmp_session_t *session,
+    mem_pool_t *pool,mem_buf_chain_t *chain);
+
+void rtmp_core_free_chains(rtmp_session_t *session,
+    mem_pool_t *pool,mem_buf_chain_t *chain);
+
+int32_t rtmp_recv_buf(int sockfd,mem_buf_t *buf);
+int32_t rtmp_send_buf(int sockfd,mem_buf_t *buf);
+
+void rtmp_chain_send(rtmp_event_t *ev);
+
+int32_t rtmp_handler_init(rtmp_cycle_t *cycle);
+
+mem_buf_t* rtmp_prepare_amf_buffer(mem_pool_t *temp_pool,
+    amf_data_t **amf,uint32_t num);
+
+uint32_t rtmp_hash_key(const u_char *data, size_t len);
+uint32_t rtmp_hash_string(const char *data);
 
 extern rtmp_module_t rtmp_core_moudle;
 extern rtmp_module_t rtmp_host_moudle;

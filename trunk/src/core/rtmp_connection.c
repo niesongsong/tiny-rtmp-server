@@ -7,7 +7,7 @@
 #include "rtmp_core.h"
 
 
-void ngx_drain_connections()
+void drain_connections()
 {
     return ;
 }
@@ -17,23 +17,23 @@ rtmp_connection_t *get_connection(rtmp_listening_t  *ls,fd_t s)
     rtmp_connection_t  *c;
     rtmp_event_t       *rev, *wev;
     mem_pool_t         *pool;
-    rtmp_cycle_t       *ngx_cycle;
+    rtmp_cycle_t       *rtmp_cycle;
 
-    ngx_cycle = ls->cycle;
+    rtmp_cycle = ls->cycle;
 
-    c = ngx_cycle->free_connections;
+    c = rtmp_cycle->free_connections;
 
     if (c == NULL) {
-        ngx_drain_connections();
-        c = ngx_cycle->free_connections;
+        drain_connections();
+        c = rtmp_cycle->free_connections;
     }
 
     if (c == NULL) {
-        printf("there is not enough connections!\n");
+        rtmp_log(RTMP_LOG_DEBUG,"no enough connections[%d]!",s);
         return NULL;
     }
 
-    ngx_cycle->free_connections = c->next;
+    rtmp_cycle->free_connections = c->next;
     rev = c->read;
     wev = c->write;
     pool = c->pool;
@@ -55,7 +55,45 @@ rtmp_connection_t *get_connection(rtmp_listening_t  *ls,fd_t s)
     rev->index = -1;
     wev->index = -1;
 
+    rtmp_log(RTMP_LOG_DEBUG,"get connection:%p",c);
+
     return c;
+}
+
+void close_connection(rtmp_connection_t *c)
+{
+    rtmp_cycle_t  *ngx_cycle;
+    fd_t fd;
+
+    ngx_cycle = c->listening->cycle;
+
+    fd = c->fd;
+    if (fd == -1) {
+        rtmp_log(RTMP_LOG_DEBUG,"[%d]already closed socket!",c->fd);
+        return ;
+    }
+
+    if (c->read->timer_set) {
+        rtmp_event_del_timer(c->read);
+    }
+
+    if (c->write->timer_set) {
+        rtmp_event_del_timer(c->write);
+    }
+
+    rtmp_event_delete_conn(c);
+
+    c->fd = -1;
+    closesocket(fd);
+    
+    rtmp_log(RTMP_LOG_DEBUG,"[%d]closed socket",fd);
+
+    c->next = ngx_cycle->free_connections;
+    ngx_cycle->free_connections = c;
+
+    rtmp_log(RTMP_LOG_DEBUG,"close connection[%p]",c);
+
+    return ;
 }
 
 void free_connection(rtmp_connection_t *c)
@@ -69,11 +107,14 @@ void free_connection(rtmp_connection_t *c)
     c->fd = -1;
 
     if (fd != -1) {
+        rtmp_log(RTMP_LOG_DEBUG,"close socket",fd);
         closesocket(fd);
     }
 
-    c->data = ngx_cycle->free_connections;
+    c->next = ngx_cycle->free_connections;
     ngx_cycle->free_connections = c;
+
+    rtmp_log(RTMP_LOG_DEBUG,"free connection:%p",c);
 
     return ;
 }

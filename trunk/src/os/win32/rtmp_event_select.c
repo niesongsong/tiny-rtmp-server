@@ -22,13 +22,21 @@ struct event_io_select_ctx_s {
 };
 
 static int32_t event_io_select_init(rtmp_event_io_t *io);
-static int32_t event_io_select_add(rtmp_event_io_t *io,rtmp_event_t *ev,uint32_t flag);
-static int32_t event_io_select_poll(rtmp_event_io_t *io,uint32_t msec,uint32_t flag);
-static int32_t event_io_select_del(rtmp_event_io_t *io,rtmp_event_t *ev,uint32_t flag);
+static int32_t event_io_select_add(rtmp_event_io_t *io,
+    rtmp_event_t *ev,uint32_t flag);
+static int32_t event_io_select_poll(rtmp_event_io_t *io,
+    uint32_t msec,uint32_t flag);
+static int32_t event_io_select_del(rtmp_event_io_t *io,
+    rtmp_event_t *ev,uint32_t flag);
 static int32_t event_io_select_done(rtmp_event_io_t *io);
 
-static int32_t event_io_accept_disable(rtmp_cycle_t *cycle);
-static int32_t event_io_accept_enable(rtmp_cycle_t *cycle);
+static int32_t event_io_select_add_conn(rtmp_event_io_t *io,
+    rtmp_connection_t *c);
+static int32_t event_io_select_del_conn(rtmp_event_io_t *io,
+    rtmp_connection_t *c);
+
+int32_t event_io_accept_disable(rtmp_cycle_t *cycle);
+int32_t event_io_accept_enable(rtmp_cycle_t *cycle);
 
 static int32_t event_select_repair_fd_sets(rtmp_event_io_t *io);
 
@@ -39,8 +47,10 @@ rtmp_event_io_t event_io_select = {
     0,
     event_io_select_init,
     event_io_select_add,
+    event_io_select_add_conn,
     event_io_select_poll,
     event_io_select_del,
+    event_io_select_del_conn,
     event_io_select_done
 };
 
@@ -79,6 +89,11 @@ int32_t event_io_select_add(rtmp_event_io_t *io,rtmp_event_t *ev,uint32_t flag)
     event_io_select_ctx_t   *sctx;
     uint32_t                 nevents;
 
+    if (ev->index != -1) {
+        rtmp_log(RTMP_LOG_WARNING,"event already!");
+        return RTMP_FAILED;
+    }
+
     c = ev->data;
 
     sctx = io->data;
@@ -86,7 +101,7 @@ int32_t event_io_select_add(rtmp_event_io_t *io,rtmp_event_t *ev,uint32_t flag)
         return RTMP_FAILED;
     }
 
-    if ((flag != EVENT_READ) || (flag == EVENT_WRITE)) {
+    if ((flag != EVENT_READ) && (flag != EVENT_WRITE)) {
         rtmp_log(RTMP_LOG_WARNING,"unknown flag %d",flag);
         return RTMP_FAILED;
     }
@@ -187,6 +202,8 @@ int32_t event_io_select_poll(rtmp_event_io_t *io, uint32_t msec, uint32_t flag)
         c = ev->data;
         found = 0;
 
+        ev->ready = 0;
+
         if (ev->write) {
             if (FD_ISSET(c->fd, &sctx->write_set)) {
                 found = 1;
@@ -228,16 +245,20 @@ int32_t event_io_select_del(rtmp_event_io_t *io,rtmp_event_t *ev,uint32_t flag)
     rtmp_event_t            *e;
     uint32_t                 nevents;
 
+    if (ev->index == -1) {
+        rtmp_log(RTMP_LOG_WARNING,"event already!");
+        return RTMP_FAILED;
+    }
+
     sctx = io->data;
     if (sctx == NULL) {
         return RTMP_FAILED;
     }
 
     c = ev->data;
-
     ev->active = 0;
 
-    if ((flag != EVENT_READ) || (flag == EVENT_WRITE)) {
+    if ((flag != EVENT_READ) && (flag != EVENT_WRITE)) {
         rtmp_log(RTMP_LOG_WARNING,"unknown flag %d",flag);
         return RTMP_FAILED;
     }
@@ -281,5 +302,61 @@ int32_t event_io_select_done(rtmp_event_io_t *io)
 
 int32_t event_select_repair_fd_sets(rtmp_event_io_t *io)
 {
+    u_int                   i;
+    int                     n;
+    socklen_t               len;
+    socket_t                s;
+    event_io_select_ctx_t   *sctx;
+
+    sctx = io->data;
+
+    for (i = 0; i < sctx->saved_read.fd_count; i++) {
+
+        s = sctx->saved_read.fd_array[i];
+        len = sizeof(int);
+
+        if (getsockopt(s, SOL_SOCKET, SO_TYPE, (char *) &n, &len) == -1) {
+
+            rtmp_log(RTMP_LOG_NORMAL, "invalid descriptor %d "
+                "in read fd_set,err[%d]", s,sock_errno);
+
+            FD_CLR(s, &sctx->saved_read);
+        }
+    }
+
+    for (i = 0; i < sctx->saved_write.fd_count; i++) {
+
+        s = sctx->saved_write.fd_array[i];
+        len = sizeof(int);
+
+        if (getsockopt(s, SOL_SOCKET, SO_TYPE, (char *) &n, &len) == -1) {
+
+            rtmp_log(RTMP_LOG_NORMAL, "invalid descriptor %d "
+                "in write fd_set,err[%d]", s,sock_errno);
+
+            FD_CLR(s, &sctx->saved_write);
+        }
+    }
+
+    return RTMP_OK;
+}
+
+static int32_t event_io_select_add_conn(rtmp_event_io_t *io,
+    rtmp_connection_t *c)
+{
+    return event_io_select_add(io,c->read,EVENT_READ);
+}
+
+static int32_t event_io_select_del_conn(rtmp_event_io_t *io,
+    rtmp_connection_t *c)
+{
+    if (c->write->active) {
+        rtmp_event_delete(c->write,EVENT_WRITE);
+    }
+
+    if (c->read->active) {
+        rtmp_event_delete(c->read,EVENT_READ);
+    }
+
     return RTMP_OK;
 }

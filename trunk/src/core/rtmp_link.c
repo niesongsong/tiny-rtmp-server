@@ -34,7 +34,6 @@ void list_init(list_t * l)
 void list_insert_tail(list_t * l,link_t * n)
 {
     _link_insert(l->prev,n);
-
 }
 
 void list_insert_head(list_t * l,link_t * n)
@@ -45,6 +44,11 @@ void list_insert_head(list_t * l,link_t * n)
 void list_remove(link_t * n)
 {
     _link_remove(n);
+}
+
+int  list_empty(list_t *l)
+{
+    return l == l->next;
 }
 
 int list_num(list_t * l)

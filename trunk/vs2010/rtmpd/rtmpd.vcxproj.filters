@@ -123,11 +123,53 @@
     <ClCompile Include="..\..\src\rtmp\rtmp_core.c">
       <Filter>源文件\rtmp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\rtmp_send.c">
-      <Filter>源文件\core</Filter>
+    <ClCompile Include="..\..\src\rtmp\rtmp_recv.c">
+      <Filter>源文件\rtmp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\rtmp_recv.c">
-      <Filter>源文件\core</Filter>
+    <ClCompile Include="..\..\src\rtmp\rtmp_send.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_handler.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_connect.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_play.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_publish.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_message.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_stream.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_event_epoll.c">
+      <Filter>源文件\os\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_event_select.c">
+      <Filter>源文件\os\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_alloc.c">
+      <Filter>源文件\os\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_atomic.c">
+      <Filter>源文件\os\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_shmem.c">
+      <Filter>源文件\os\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_socket.c">
+      <Filter>源文件\os\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_linux_config.h">
+      <Filter>源文件\os\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_live.c">
+      <Filter>源文件\rtmp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -201,6 +243,15 @@
       <Filter>源文件\os</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\rtmp\rtmp_session.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_handler.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_message.h">
+      <Filter>源文件\rtmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_protocol.h">
       <Filter>源文件\rtmp</Filter>
     </ClInclude>
   </ItemGroup>

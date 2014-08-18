@@ -28,8 +28,10 @@ typedef void (*connection_handler_pt)(rtmp_connection_t *c);
 
 typedef int32_t (*event_io_init)(rtmp_event_io_t *io);
 typedef int32_t (*event_io_add)(rtmp_event_io_t *io,rtmp_event_t *ev,uint32_t flag);
+typedef int32_t (*event_io_add_conn)(rtmp_event_io_t *io,rtmp_connection_t *c);
 typedef int32_t (*event_io_poll)(rtmp_event_io_t *io,uint32_t msec,uint32_t flag);
 typedef int32_t (*event_io_del)(rtmp_event_io_t *io,rtmp_event_t *ev,uint32_t flag);
+typedef int32_t (*event_io_del_conn)(rtmp_event_io_t *io,rtmp_connection_t *c);
 typedef int32_t (*event_io_done)(rtmp_event_io_t *io);
 
 struct rtmp_event_s {
@@ -42,7 +44,6 @@ struct rtmp_event_s {
     unsigned                write:1;
     unsigned                active:1;
     unsigned                ready:1;
-    
     int16_t                 index;
 
     event_handler           handler;
@@ -52,28 +53,33 @@ struct rtmp_event_s {
 };
 
 struct rtmp_event_io_s{
-    uint32_t       type;
-    char           name[16];
+    uint32_t            type;
+    char                name[16];
 
-    void          *data;
+    void               *data;
 
-    uint32_t       max_conn;
+    uint32_t            max_conn;
 
-    event_io_init  io_init;
-    event_io_add   io_add;
-    event_io_poll  io_poll;
-    event_io_del   io_del;
-    event_io_done  io_done;
+    event_io_init       io_init;
+    event_io_add        io_add;
+    event_io_add_conn   io_add_conn;
+    event_io_poll       io_poll;
+    event_io_del        io_del;
+    event_io_del_conn   io_del_conn;
+    event_io_done       io_done;
 
     /*event queue*/
-    queue_t         accept;
-    queue_t         posted;
+    queue_t             accept;
+    queue_t             posted;
 };
 
 void rtmp_event_poll(uint32_t msec);
 
 uint32_t rtmp_event_add(rtmp_event_t *ev,int flag);
+uint32_t rtmp_event_add_conn(rtmp_connection_t *c);
 uint32_t rtmp_event_delete(rtmp_event_t *ev,int flag);
-uint32_t rtmp_event_add_timer(rtmp_event_t *ev,uint16_t msec);
+uint32_t rtmp_event_delete_conn(rtmp_connection_t *c);
+uint32_t rtmp_event_add_timer(rtmp_event_t *ev,uint32_t msec);
 uint32_t rtmp_event_del_timer(rtmp_event_t *ev);
+
 #endif

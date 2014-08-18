@@ -19,3 +19,10 @@ int set_blocking(socket_t s)
 
     return ioctlsocket(s, FIONBIO, &nb);
 }
+
+int set_tcppush(socket_t s)
+{
+    unsigned long  push = 0;
+    return setsockopt(s,IPPROTO_TCP,TCP_NODELAY,
+        (const char*)&push,sizeof(push));
+}

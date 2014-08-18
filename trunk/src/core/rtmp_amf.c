@@ -38,8 +38,10 @@ static amf_data_t* _amf_new_string(const char *s,int len);
 static amf_data_t* _amf_new_number(double n);
 static amf_data_t* _amf_new_date(double n,uint16_t u);
 static amf_data_t* _amf_new_object();
+static amf_data_t* _amf_new_ecma_object();
 static amf_data_t* _amf_new_null();
 static amf_data_t* _amf_new_object_end();
+static amf_data_t* _amf_new_undefined();
 
 static amf_t * amf_decode_in(const char* buf,int *len);
 static int amf_encode_in(amf_data_t * data,char* buf,int *len);
@@ -49,10 +51,6 @@ static amf_t* amf_decode_in_object(const char* buf,int *len);
 
 int amf_init(amf_malloc alloc_pt,amf_free free_pt,void *u)
 {
-    if (__amf_alloc__) {
-        return 1;
-    }
-
     __amf_alloc__ = alloc_pt;
     __amf_free__  = free_pt;
     __amf_u__     = u;
@@ -91,6 +89,10 @@ amf_data_t* amf_new(uint8_t type,...)
         d = _amf_new_object_end();
         break;
 
+    case amf_ecma_array:
+        d = _amf_new_ecma_object();
+        break;
+
     case amf_object:
         d = _amf_new_object();
         break;
@@ -103,6 +105,9 @@ amf_data_t* amf_new(uint8_t type,...)
     case amf_string:
         tmp.s_val = va_arg(ap,char*);
         slen = va_arg(ap,int32_t);
+        if (slen == 0) {
+            slen = strlen(tmp.s_val);
+        }
         d = _amf_new_string(tmp.s_val,slen);
         break;
 
@@ -199,7 +204,7 @@ static amf_data_t* _amf_new_date(double n,uint16_t u)
         d->n_val = n;
 
         tz = (char*)d + sizeof(amf_t);
-        byte_write_2((const char *)&u,tz);
+        byte_write_int16((const char *)&u,tz);
         
         return (amf_data_t*)d;
     }
@@ -209,8 +214,9 @@ static amf_data_t* _amf_new_date(double n,uint16_t u)
 
 static amf_data_t* _amf_new_object()
 {
-    amf_t *d;
+    amf_t *d,*e;
 
+    e = (amf_t*)_amf_new_object_end();
     d = AMF_malloc(sizeof(amf_t)+sizeof(list_t));
 
     if (d) {
@@ -220,9 +226,35 @@ static amf_data_t* _amf_new_object()
         /*init props list*/
         list_init((list_t*)d->o_val);
 
+        amf_put_prop((amf_data_t*)d,"",(amf_data_t*)e);
+
         return (amf_data_t*)d;
     }
 
+    amf_free_data((amf_data_t*)e);
+    return NULL;
+}
+
+static amf_data_t* _amf_new_ecma_object()
+{
+    amf_t *d,*e;
+
+    e = (amf_t*)_amf_new_object_end();
+    d = AMF_malloc(sizeof(amf_t)+sizeof(list_t));
+
+    if (d) {
+        d->type = amf_ecma_array;
+        d->o_val = (link_t*)((char*)d + sizeof(amf_t));
+
+        /*init props list*/
+        list_init((list_t*)d->o_val);
+
+        amf_put_prop((amf_data_t*)d,"",(amf_data_t*)e);
+
+        return (amf_data_t*)d;
+    }
+
+    amf_free_data((amf_data_t*)e);
     return NULL;
 }
 
@@ -234,6 +266,20 @@ static amf_data_t* _amf_new_null()
 
     if (d) {
         d->type = amf_null;
+        return (amf_data_t*)d;
+    }
+
+    return NULL;
+}
+
+static amf_data_t* _amf_new_undefined()
+{
+    amf_t *d;
+
+    d = AMF_malloc(sizeof(amf_t));
+
+    if (d) {
+        d->type = amf_undefined;
         return (amf_data_t*)d;
     }
 
@@ -295,8 +341,9 @@ void amf_free_data(amf_data_t * data)
     }
 
     switch (d->type) {
+    case amf_ecma_array:
     case amf_object:
-
+    
         /*free props*/
         amf_free_props((amf_data_t*)d);
 
@@ -310,7 +357,6 @@ void amf_free_data(amf_data_t * data)
 
 int amf_put_prop(amf_data_t *obj,const char* name,const amf_data_t *data)
 {
-    amf_t *d;
     link_t *h,*n;
     amf_prop_t *prop;
     int rc;
@@ -319,19 +365,20 @@ int amf_put_prop(amf_data_t *obj,const char* name,const amf_data_t *data)
         return -1;
     }
 
-    d = (amf_t *)data;
-
     /*name:""  means object_end */
-    if ((name[0] == '\0') && (d ->type != amf_object_end)) {
+    if ((name[0] == '\0') 
+     && (((amf_t *)data)->type != amf_object_end)) 
+    {
         return -1;
     }
 
-    d = (amf_t *)obj;
-    if (d->type != amf_object) {
+    if ((((amf_t *)obj)->type != amf_object) 
+      && ((amf_t *)obj)->type != amf_ecma_array)
+    {
         return -1;
     }
 
-    h = d->o_val;
+    h = ((amf_t *)obj)->o_val;
     n = h->next;
     while (n != h) {
         prop = struct_entry(n,amf_prop_t,link);
@@ -341,6 +388,9 @@ int amf_put_prop(amf_data_t *obj,const char* name,const amf_data_t *data)
             return -1;
         }
 
+        if (((amf_t *)(prop->data))->type == amf_object_end) {
+            break;
+        }
         n = n->next;
     }
 
@@ -395,7 +445,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
     amf_t * data;
     amf_t   tmp;
     uint16_t tz;
-    int16_t slen;
+    volatile int16_t slen;
     int32_t slen_l;
     int last;
 
@@ -403,7 +453,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
         return 0;
     }
 
-    byte_read_1(buf,(char*)&tmp.type);
+    byte_read_int8(buf,(char*)&tmp.type);
 
     (*len)--;
     buf++;
@@ -415,7 +465,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_8(buf,(char*)&tmp.n_val);
+        byte_read_int64(buf,(char*)&tmp.n_val);
         buf += 8;
         (*len) -= 8;
 
@@ -428,7 +478,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_1(buf,(char*)&tmp.b_val);
+        byte_read_int8(buf,(char*)&tmp.b_val);
         (*len)--;
         buf++;
         
@@ -441,7 +491,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_2(buf,(char*)&slen);
+        byte_read_int16(buf,(char*)&slen);
         (*len) -= 2;
         buf += 2;
 
@@ -461,11 +511,11 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_8(buf,(char*)&tmp.n_val);
+        byte_read_int64(buf,(char*)&tmp.n_val);
         buf += 8;
         (*len) -= 8;
 
-        byte_read_2(buf,(char*)&tz);
+        byte_read_int16(buf,(char*)&tz);
         buf += 2;
         (*len) -= 2;
 
@@ -478,7 +528,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_4(buf,(char*)&slen_l);
+        byte_read_int32(buf,(char*)&slen_l);
         (*len) -= 4;
         buf += 4;
 
@@ -497,6 +547,17 @@ static amf_t* amf_decode_in(const char* buf,int *len)
         
         break;
 
+    case amf_ecma_array:
+        
+        if (*len < 4) {
+            return 0;
+        }
+        /*ignore count*/
+        (*len) -= 4;  
+        buf += 4;
+
+        /*no break*/
+
     case amf_object:
 
         last = *len;
@@ -513,6 +574,10 @@ static amf_t* amf_decode_in(const char* buf,int *len)
 
     case amf_object_end:
         data = (amf_t *)_amf_new_object_end();
+        break;
+
+    case amf_undefined:
+        data = (amf_t *)_amf_new_undefined();
         break;
 
     default:
@@ -544,7 +609,7 @@ static int amf_encode_in_object(amf_t * d,char* buf,int *len)
             break;
         }
 
-        byte_write_2((const char*)&slen,buf);
+        byte_write_int16((const char*)&slen,buf);
 
         buf += 2;
         (*len) -= 2;
@@ -590,7 +655,7 @@ static amf_t* amf_decode_in_object(const char* buf,int *len)
             goto invalid;
         }
 
-        byte_read_2(buf,(char*)&slen);
+        byte_read_int16(buf,(char*)&slen);
 
         buf += 2;
         (*len) -= 2;
@@ -613,13 +678,13 @@ static amf_t* amf_decode_in_object(const char* buf,int *len)
             goto invalid;
         }
 
+        if (c->type == amf_object_end) {
+            return d;
+        }
+
         if (amf_put_prop((amf_data_t*)d,name,(amf_data_t*)c) != 0) {
             amf_free_data((amf_data_t*)c);
             goto invalid;
-        }
-
-        if (c->type == amf_object_end) {
-            return d;
         }
     } 
 
@@ -642,7 +707,7 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
     }
 
     /*write type*/
-    byte_write_1((const char*)&d->type,buf);
+    byte_write_int8((const char*)&d->type,buf);
 
     (*len)--;
     buf++;
@@ -653,7 +718,7 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_8((const char*)&d->n_val,buf);
+        byte_write_int64((const char*)&d->n_val,buf);
         buf += 8;
         (*len) -= 8;
 
@@ -664,7 +729,7 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_1((const char*)&d->b_val,buf);
+        byte_write_int8((const char*)&d->b_val,buf);
         buf += 1;
         (*len) -= 1;
 
@@ -675,11 +740,11 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_8((const char*)&d->n_val,buf);
+        byte_write_int64((const char*)&d->n_val,buf);
         buf += 8;
         (*len) -= 8;
 
-        byte_write_2((char*)d + sizeof(amf_t),buf);
+        byte_write_int16((char*)d + sizeof(amf_t),buf);
         buf += 2;
         (*len) -= 2;
 
@@ -691,7 +756,7 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_2((const char*)&slen,buf);
+        byte_write_int16((const char*)&slen,buf);
         buf += 2;
         (*len) -= 2;
 
@@ -708,7 +773,7 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_4((const char*)&slen_l,buf);
+        byte_write_int32((const char*)&slen_l,buf);
         buf += 4;
         (*len) -= 4;
 
@@ -718,14 +783,27 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
 
         break;
 
+    case amf_ecma_array:
+        if (*len < 4) {
+            return -1;
+        }
+        
+        memset(buf,0,4);
+        buf += 4;
+        (*len) -= 4;
+
+        /*no break*/
+
     case amf_object:
         last = *len;
 
         rc = amf_encode_in_object(d,buf,len);
 
-        if (rc != -1) {
-            buf += last - *len;
+        if (rc == -1) {
+            return -1;
         }
+
+        buf += last - *len;
 
         break;
 
@@ -758,6 +836,53 @@ int amf_encode(amf_data_t *data,char *buf,int maxlen)
     return amf_encode_in(data,buf,&maxlen);
 }
 
+char* amf_get_string(amf_data_t *data)
+{
+    amf_t *d;
+
+    d = (amf_t*)data;
+    if (d->type == amf_long_string || d->type == amf_string) {
+        return d->s_val;
+    }
+
+    return 0;
+}
+
+uint8_t amf_get_bool(amf_data_t *data)
+{
+    amf_t *d;
+
+    d = (amf_t*)data;
+    if (d->type == amf_boolean) {
+        return d->b_val;
+    }
+
+    return 0;
+}
+
+double amf_get_number(amf_data_t *data)
+{
+    amf_t *d;
+
+    d = (amf_t*)data;
+    if (d->type == amf_number) {
+        return d->n_val;
+    }
+
+    return 0;
+}
+
+double  amf_get_date(amf_data_t *data)
+{
+    amf_t *d;
+
+    d = (amf_t*)data;
+    if (d->type == amf_date) {
+        return d->n_val;
+    }
+
+    return 0;
+}
 
 #ifdef HAVE_DEBUG
 
@@ -776,7 +901,7 @@ int amf_dump_data(amf_data_t *data)
 
     switch (d->type) {
     case amf_number:
-        printf("double %lf ",d->n_val);
+        printf("double %lf \n",d->n_val);
 
         break;
 
@@ -791,7 +916,23 @@ int amf_dump_data(amf_data_t *data)
 
             printf("[%s] : ",prop->name);
             amf_dump_data(prop->data);
-            printf("\n");
+
+            n = n->next;
+        }
+
+        break;
+
+    case amf_ecma_array:
+        printf("array: [ \ncount:0\n");
+
+        t = d->o_val;
+        n = t->next;
+
+        while (n != d->o_val) {
+            prop = struct_entry(n,amf_prop_t,link);
+
+            printf("[%s] : ",prop->name);
+            amf_dump_data(prop->data);
 
             n = n->next;
         }
@@ -804,20 +945,28 @@ int amf_dump_data(amf_data_t *data)
         break;
 
     case amf_boolean:
-        printf("boolean %d",d->b_val);
+        printf("boolean %d\n",d->b_val);
 
         break;
 
     case amf_date:
-        byte_write_2((char*)d + sizeof(amf_t),(char*)&tz);
+        byte_write_int16((char*)d + sizeof(amf_t),(char*)&tz);
         printf("date %lf,%d",d->n_val,tz);
         
         break;
 
     case amf_long_string:
     case amf_string:
-        printf("string \"%s\"",d->s_val);
+        printf("string \"%s\"\n",d->s_val);
 
+        break;
+
+    case amf_null:
+        printf("null\n");
+        break;
+
+    case amf_undefined:
+        printf("undefined\n");
         break;
 
     default:

@@ -18,14 +18,11 @@ typedef struct rtmp_handshake_s{
 
     u_char             *digest;
 
-    uint32_t            epoch;
-    uint32_t            c1s1_time;
-    uint32_t            peer_epoch; 
     uint32_t            stage:4;
-    uint32_t            old:4;
-
-    char                version[4];
-
+    
+    uint32_t            epoch;
+    uint32_t            peer_epoch;
+    char                peer_version[4];
 } rtmp_handshake_t;
 
 void rtmp_core_handshake_init();

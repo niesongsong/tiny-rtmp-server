@@ -23,8 +23,6 @@ void *mem_alloc(size_t size)
         rtmp_log(RTMP_LOG_WARNING, "malloc(%u) failed", size);
     }
 
-    rtmp_log(RTMP_LOG_DEBUG, "malloc: %p:%u", p, size);
-
     return p;
 }
 
@@ -60,6 +58,7 @@ mem_pool_t *mem_create_pool(size_t size)
 
     p->current = p;
     p->large = NULL;
+    p->chain = NULL;
 
     return p;
 }
@@ -99,6 +98,7 @@ void mem_reset_pool(mem_pool_t *pool)
     }
 
     pool->large = NULL;
+    pool->chain = NULL;
 
     for (p = pool; p; p = p->d.next) {
         p->d.last = (u_char *) p + sizeof(mem_pool_t);
@@ -286,7 +286,6 @@ int ngx_pfree(mem_pool_t *pool, void *p)
     return RTMP_FAILED;
 }
 
-
 void * mem_pcalloc(mem_pool_t *pool, size_t size)
 {
     void *p;
@@ -298,3 +297,121 @@ void * mem_pcalloc(mem_pool_t *pool, size_t size)
 
     return p;
 }
+
+mem_buf_chain_t* mem_alloc_chain_link(mem_pool_t *pool)
+{
+    mem_buf_chain_t  *cl;
+
+    cl = pool->chain;
+
+    if (cl) {
+        pool->chain = cl->next;
+        return cl;
+    }
+
+    cl = mem_pcalloc(pool, sizeof(mem_buf_chain_t));
+    if (cl == NULL) {
+        return NULL;
+    }
+
+    return cl;
+}
+
+
+char *mem_dup_str(char *src,mem_pool_t *pool)
+{
+    size_t  len;
+    char   *dst;
+
+    len = strlen(src);
+    dst = mem_pcalloc(pool,len + 1);
+
+    if (dst && len > 0) {
+        memcpy(dst,src,len);
+    }
+
+    return dst;
+}
+
+mem_buf_t* mem_buf_palloc(mem_pool_t *pool,mem_buf_t *buf,size_t size)
+{
+    if (buf != NULL) {
+        buf->buf = mem_palloc(pool,sizeof(mem_buf_t) + size);
+    } else {
+        buf = mem_palloc(pool,sizeof(mem_buf_t) + size);
+        if (buf) {
+            buf->buf = (unsigned char*)buf + sizeof(mem_buf_t);
+        }
+    }
+
+    if (buf->buf == NULL) {
+        return NULL;
+    }
+
+    buf->last = buf->buf;
+    buf->end = buf->buf + size;
+
+    return buf;
+}
+
+mem_buf_t* mem_buf_pcalloc(mem_pool_t *pool,mem_buf_t *buf,size_t size)
+{
+    if (buf != NULL) {
+        buf->buf = mem_pcalloc(pool,sizeof(mem_buf_t) + size);
+    } else {
+        buf = mem_pcalloc(pool,sizeof(mem_buf_t) + size);
+        if (buf) {
+            buf->buf = (unsigned char*)buf + sizeof(mem_buf_t);
+        }
+    }
+
+    if (buf->buf == NULL) {
+        return NULL;
+    }
+
+    buf->last = buf->buf;
+    buf->end = buf->buf + size;
+
+    return buf;
+}
+
+void *mem_prealloc(mem_pool_t *pool,void *ptr,size_t old,size_t new)
+{
+    if (new > old) {
+        void *op;
+
+        op = mem_palloc(pool,new);
+        if (op == NULL) {
+            return NULL;
+        }
+
+        if (ptr) {
+            memcpy(op,ptr,old);
+        }
+
+        return op;
+    }
+
+    return ptr;
+}
+
+void *mem_pcrealloc(mem_pool_t *pool,void *ptr,size_t old,size_t new)
+{
+    if (new > old) {
+        void *op;
+
+        op = mem_pcalloc(pool,new);
+        if (op == NULL) {
+            return NULL;
+        }
+
+        if (ptr) {
+            memcpy(op,ptr,old);
+        }
+        
+        return op;
+    }
+
+    return ptr;
+}
+

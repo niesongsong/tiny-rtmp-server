@@ -16,15 +16,15 @@
 
 #define byte_read(in,out,l)     byte_write(in,out,l,BYTE_ENDIAN)
 
-#define byte_read_1(in,out)     byte_write(in,out,1,BYTE_ENDIAN)
-#define byte_read_2(in,out)     byte_write(in,out,2,BYTE_ENDIAN)
-#define byte_read_4(in,out)     byte_write(in,out,4,BYTE_ENDIAN)
-#define byte_read_8(in,out)     byte_write(in,out,8,BYTE_ENDIAN)
+#define byte_read_int8(in,out)     byte_write(in,out,1,BYTE_ENDIAN)
+#define byte_read_int16(in,out)    byte_write(in,out,2,BYTE_ENDIAN)
+#define byte_read_int32(in,out)    byte_write(in,out,4,BYTE_ENDIAN)
+#define byte_read_int64(in,out)    byte_write(in,out,8,BYTE_ENDIAN)
 
-#define byte_write_1(in,out)    byte_write(in,out,1,BYTE_ENDIAN)
-#define byte_write_2(in,out)    byte_write(in,out,2,BYTE_ENDIAN)
-#define byte_write_4(in,out)    byte_write(in,out,4,BYTE_ENDIAN)
-#define byte_write_8(in,out)    byte_write(in,out,8,BYTE_ENDIAN)
+#define byte_write_int8(in,out)    byte_write(in,out,1,BYTE_ENDIAN)
+#define byte_write_int16(in,out)   byte_write(in,out,2,BYTE_ENDIAN)
+#define byte_write_int32(in,out)   byte_write(in,out,4,BYTE_ENDIAN)
+#define byte_write_int64(in,out)   byte_write(in,out,8,BYTE_ENDIAN)
 
 int byte_write(const char *in,char *out,int l,int order);
 void byte_fill_random(char *buf,int size);

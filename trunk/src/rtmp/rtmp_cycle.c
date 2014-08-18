@@ -139,6 +139,7 @@ rtmp_get_options(int argc, char *const *argv)
     return RTMP_OK;
 }
 
+void rtmp_do_test();
 
 int main(int argc,char **argv)
 {
@@ -155,7 +156,7 @@ int main(int argc,char **argv)
 
     rtmp_time_update();
 
-    if (rtmp_log_init(RTMP_LOG_INFO,rtmp_log_file) != RTMP_OK) {
+    if (rtmp_log_init(RTMP_LOG_DEBUG,rtmp_log_file) != RTMP_OK) {
         exit(-1);
     }
 
@@ -201,7 +202,7 @@ int main(int argc,char **argv)
 rtmp_cycle_t* rtmp_init_cycle(void)
 {
     rtmp_cycle_t  *cycle;
-    mem_pool_t    *pool;
+    mem_pool_t    *pool,*temp_pool;
     size_t         slen;
     int            m;
     rtmp_module_t *module;
@@ -212,7 +213,13 @@ rtmp_cycle_t* rtmp_init_cycle(void)
 
     pool = mem_create_pool(MEM_DEFAULT_POOL_SIZE);
     if (pool == NULL) {
-        rtmp_log(RTMP_LOG_ERR,"alloc failed!");
+        rtmp_log(RTMP_LOG_ERR,"alloc pool failed!");
+        return NULL;
+    }
+
+    temp_pool = mem_create_pool(MEM_DEFAULT_POOL_SIZE);
+    if (temp_pool == NULL) {
+        rtmp_log(RTMP_LOG_ERR,"alloc temp_pool failed!");
         return NULL;
     }
 
@@ -223,6 +230,8 @@ rtmp_cycle_t* rtmp_init_cycle(void)
     }
 
     cycle->pool = pool;
+    cycle->temp_pool = temp_pool;
+
     cycle->conf_file = mem_pcalloc(pool,slen + 1);
     if (cycle->conf_file == NULL) {
         return NULL;
@@ -257,7 +266,7 @@ rtmp_cycle_t* rtmp_init_cycle(void)
 
         module = rtmp_modules[m];
         if (module->init_cycle != NULL) {
-            if (module->init_cycle(cycle) != RTMP_OK) {
+            if (module->init_cycle(cycle,module) != RTMP_OK) {
                 rtmp_log(RTMP_LOG_WARNING,"configure module failed[%d]",m);
                 return 0;
             }
@@ -265,8 +274,11 @@ rtmp_cycle_t* rtmp_init_cycle(void)
     }
 
     /*init core process*/
-    if (rtmp_modules[0]->init_forking) {
-        rtmp_modules[0]->init_forking(cycle);
+    module = rtmp_modules[0];
+    if (module->init_forking) {
+        if (rtmp_modules[0]->init_forking(cycle,module) == RTMP_FAILED) {
+            return 0;
+        }
     }
 
     return cycle;
@@ -292,7 +304,7 @@ static void rtmp_run_workers_cycle(rtmp_cycle_t * cycle)
 
         module = rtmp_modules[m];
         if (module->init_forking != NULL) {
-            if (module->init_forking(cycle) != RTMP_OK) {
+            if (module->init_forking(cycle,module) != RTMP_OK) {
                 rtmp_log(RTMP_LOG_WARNING,"forked failed[%d]",m);
                 return;
             }
@@ -300,7 +312,7 @@ static void rtmp_run_workers_cycle(rtmp_cycle_t * cycle)
     }
 
     for (;;) {
-        rtmp_event_poll(500);
+        rtmp_event_poll(80);
         rtmp_time_update();
     }
 
@@ -337,5 +349,3 @@ static void rtmp_run_master(rtmp_cycle_t * cycle)
     }
     return ;
 }
-
-

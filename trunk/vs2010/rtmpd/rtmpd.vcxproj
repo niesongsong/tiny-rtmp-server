@@ -20,13 +20,29 @@
     <ClCompile Include="..\..\src\core\rtmp_link.c" />
     <ClCompile Include="..\..\src\core\rtmp_log.c" />
     <ClCompile Include="..\..\src\core\rtmp_rbtree.c" />
-    <ClCompile Include="..\..\src\core\rtmp_recv.c" />
-    <ClCompile Include="..\..\src\core\rtmp_send.c" />
     <ClCompile Include="..\..\src\core\rtmp_time.c" />
     <ClCompile Include="..\..\src\event\rtmp_event_module.c" />
     <ClCompile Include="..\..\src\event\rtmp_event_timer.c" />
     <ClCompile Include="..\..\src\http\rtmp_hls_module.c" />
     <ClCompile Include="..\..\src\http\rtmp_http_module.c" />
+    <ClCompile Include="..\..\src\os\unix\rtmp_alloc.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_atomic.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_event_epoll.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_event_select.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_shmem.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\os\unix\rtmp_socket.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\src\os\win32\rtmp_alloc.c" />
     <ClCompile Include="..\..\src\os\win32\rtmp_atomic.c" />
     <ClCompile Include="..\..\src\os\win32\rtmp_event_select.c" />
@@ -34,13 +50,22 @@
     <ClCompile Include="..\..\src\os\win32\rtmp_socket.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_app.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_chunk.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_connect.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_core.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_core_conf.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_cycle.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_handler.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_handshake.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_live.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_message.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_play.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_publish.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_push_module.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_host_module.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_recv.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_send.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_session.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_stream.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\rtmp_amf.h" />
@@ -59,6 +84,9 @@
     <ClInclude Include="..\..\src\os\rtmp_atomic.h" />
     <ClInclude Include="..\..\src\os\rtmp_config.h" />
     <ClInclude Include="..\..\src\os\rtmp_shmem.h" />
+    <ClCompile Include="..\..\src\os\unix\rtmp_linux_config.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClInclude Include="..\..\src\os\win32\rtmp_win32_config.h" />
     <ClInclude Include="..\..\src\rtmp\rtmp_app.h" />
     <ClInclude Include="..\..\src\rtmp\rtmp_chunk.h" />
@@ -67,8 +95,11 @@
       <FileType>CppHeader</FileType>
     </ClCompile>
     <ClInclude Include="..\..\src\rtmp\rtmp_core_conf.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_handler.h" />
     <ClInclude Include="..\..\src\rtmp\rtmp_handshake.h" />
     <ClInclude Include="..\..\src\rtmp\rtmp_host.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_message.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_protocol.h" />
     <ClInclude Include="..\..\src\rtmp\rtmp_session.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -100,6 +131,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -117,9 +149,17 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\librtmp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>librtmp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;libeay32.lib;ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>if not exist ..\bin\libeay32.dll  copy /Y ..\lib\libeay32.dll ..\bin\ 
+if not exist ..\bin\ssleay32.dll  copy /Y ..\lib\ssleay32.dll ..\bin\ </Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

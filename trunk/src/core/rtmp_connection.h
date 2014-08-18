@@ -30,15 +30,22 @@ struct rtmp_connection_s {
     rtmp_listening_t   *listening;
     rtmp_connection_t  *next;
 
+    /*remote*/
     struct sockaddr     sockaddr;
     socklen_t           socklen;
     char                addr_text[32];
+
+    /*local*/
+    struct sockaddr     local_sockaddr;
+    socklen_t           local_socklen;
+    char                local_addr_text[32];
 
     mem_pool_t         *pool;
 };
 
 rtmp_connection_t *get_connection(rtmp_listening_t *ls,fd_t s);
 void free_connection(rtmp_connection_t *c);
+void close_connection(rtmp_connection_t *c);
 
 /*[00][00][0000]:  family:port:addr*/
 int32_t sockaddr_sin_cmp(struct sockaddr *sin1,struct sockaddr *sin2);
