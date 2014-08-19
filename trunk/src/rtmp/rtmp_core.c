@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */
 
 
@@ -407,6 +407,8 @@ void rtmp_chain_send(rtmp_event_t *ev)
         /*next message*/
         session->out_rear = (out_rear + 1) % session->out_queue; 
     }
+
+    return ;
 }
 
 int32_t rtmp_core_handle_message(rtmp_session_t *session,

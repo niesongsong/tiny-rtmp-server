@@ -1,4 +1,4 @@
 
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */

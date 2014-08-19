@@ -1,5 +1,5 @@
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */
 
 #include "rtmp_config.h"

@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */
 
 #ifndef __TIME_H_INCLUDED__

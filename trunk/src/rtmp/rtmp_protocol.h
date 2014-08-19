@@ -1,7 +1,7 @@
 
 
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */
 
 #ifndef __RTMP_PROTOCOL_H_INCLUDED__

@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */
 
 #ifndef __RTMP_CORE_CONF_H_INCLUDED__
@@ -9,7 +9,7 @@
 
 #define RTMP_DEFAULT_PORT           1935
 #define RTMP_DEFAULT_ACK            5000000
-#define RTMP_DEFAULT_PING           50 /*ms*/
+#define RTMP_DEFAULT_PING           5000 /*ms*/
 
 #define RTMP_IPT_TYPE_PUBLISH       0x0001       
 #define RTMP_IPT_TYPE_PLAY          0x0002

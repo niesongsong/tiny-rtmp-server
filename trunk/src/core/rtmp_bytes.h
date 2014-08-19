@@ -1,5 +1,5 @@
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */
 
 #ifndef __BYTE_ORDER_H_INCLUDED__

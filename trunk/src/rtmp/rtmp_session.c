@@ -1,7 +1,7 @@
 
 
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */
 
 #include "rtmp_config.h"
@@ -75,7 +75,7 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
 
     session->out_chunk_size = RTMP_DEFAULT_OUT_CHUNKSIZE;
     session->out_queue = c->listening->cycle->out_queue;
-    session->out_message = mem_pcalloc(pool,session->out_queue);
+    session->out_message = mem_pcalloc(pool,session->out_queue*sizeof(void*));
     if (session->out_message == NULL) {
         return NULL;
     }

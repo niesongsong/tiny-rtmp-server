@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) nie950@gmail.com
+ * CopyLeft (C) nie950@gmail.com
  */
 
 
@@ -188,7 +188,13 @@ static mem_buf_t* rtmp_copy_chains_to_temp_buf(rtmp_chunk_stream_t *st,
     }
 
     if (st->chain == st->chain->next) {
+        body = rtmp_chunk_read(&st->chain->chunk,&hdr);
+        if (body == NULL) {
+            return NULL;
+        }
+
         *buf = st->chain->chunk;
+        buf->last = body;
 
     } else {
 
