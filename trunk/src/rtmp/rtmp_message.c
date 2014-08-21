@@ -84,10 +84,7 @@ rtmp_create_set_chunk_size(rtmp_session_t *session,rtmp_chunk_header_t *h)
 
     chain = rtmp_create_proctol_message(session,RTMP_MSG_CHUNK_SIZE,4);
     if (chain) {
-
-        byte_write_int32((const char*)&session->out_chunk_size,
-            (char*)chain->chunk.last);
-
+        ulong_make_byte4(chain->chunk.last,session->out_chunk_size);
         chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
@@ -95,14 +92,27 @@ rtmp_create_set_chunk_size(rtmp_session_t *session,rtmp_chunk_header_t *h)
 }
 
 mem_buf_chain_t* 
-rtmp_create_window_ack_window(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_ack_size(rtmp_session_t *session,rtmp_chunk_header_t *h)
 {
     mem_buf_chain_t *chain;
 
     chain = rtmp_create_proctol_message(session,RTMP_MSG_ACK_SIZE,4);
     if (chain) {
-        byte_write_int32((const char*)&session->ack_window,
-            (char*)chain->chunk.last);
+        ulong_make_byte4(chain->chunk.last,session->ack_window);
+        chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
+    }
+
+    return chain;
+}
+
+mem_buf_chain_t* 
+rtmp_create_ack(rtmp_session_t *session,rtmp_chunk_header_t *h)
+{
+    mem_buf_chain_t *chain;
+
+    chain = rtmp_create_proctol_message(session,RTMP_MSG_ACK,4);
+    if (chain) {
+        ulong_make_byte4(chain->chunk.last,session->in_bytes);
         chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
@@ -116,9 +126,7 @@ rtmp_create_peer_bandwidth_size(rtmp_session_t *session,rtmp_chunk_header_t *h)
 
     chain = rtmp_create_proctol_message(session,RTMP_MSG_BANDWIDTH,5);
     if (chain) {
-        byte_write_int32((const char*)&session->ack_window,
-            (char*)chain->chunk.last);
-
+        ulong_make_byte4(chain->chunk.last,session->ack_window);
         chain->chunk.last[4] = 0x02;
         chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }

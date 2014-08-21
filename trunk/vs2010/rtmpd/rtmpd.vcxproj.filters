@@ -254,5 +254,8 @@
     <ClInclude Include="..\..\src\rtmp\rtmp_protocol.h">
       <Filter>源文件\rtmp</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\rtmp_def.h">
+      <Filter>源文件\core</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

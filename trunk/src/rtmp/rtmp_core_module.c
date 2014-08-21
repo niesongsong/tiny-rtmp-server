@@ -189,8 +189,7 @@ static int32_t rtmp_core_add_listening(rtmp_cycle_t *cycle,
     ls->sockaddr = *(struct sockaddr*)(& addr->addr);
     ls->socklen = sizeof(ls->sockaddr);
     
-    sprintf(ls->sockaddr_text,"%s",
-        inet_ntoa(addr[0].addr.sin_addr));
+    sprintf(ls->sockaddr_text,"%s",inet_ntoa(addr[0].addr.sin_addr));
 
     return RTMP_OK;
 }
@@ -314,7 +313,8 @@ void rtmp_core_dump_ports(rtmp_cycle_t *cycle)
 
             host = addr[j].hosts.elts;
             for (h = 0; h < (int32_t)addr[j].hosts.nelts;h++) {
-                printf("\t%s\t%d\n",host[h]->name,host[h]->hconf->default_server);
+                printf("\t%s\t%d\n",host[h]->name,
+                    host[h]->hconf->default_server);
             }
         }
     }

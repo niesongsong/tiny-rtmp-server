@@ -73,6 +73,7 @@
     <ClInclude Include="..\..\src\core\rtmp_bytes.h" />
     <ClInclude Include="..\..\src\core\rtmp_conf.h" />
     <ClInclude Include="..\..\src\core\rtmp_connection.h" />
+    <ClInclude Include="..\..\src\core\rtmp_def.h" />
     <ClInclude Include="..\..\src\core\rtmp_error.h" />
     <ClInclude Include="..\..\src\core\rtmp_link.h" />
     <ClInclude Include="..\..\src\core\rtmp_log.h" />

@@ -5,6 +5,7 @@
 #include "rtmp_config.h"
 #include "rtmp_core.h"
 
+#if 0
 
 static int byte_write_little(const char *in,char *out,int l);
 static int byte_write_big(const char *in,char *out,int l);
@@ -95,6 +96,8 @@ static int byte_write_big(const char *in,char *out,int l)
 
     return 0;
 }
+
+#endif
 
 void byte_fill_random(char *buf,int size)
 {

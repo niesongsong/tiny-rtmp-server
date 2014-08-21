@@ -6,6 +6,8 @@
 #ifndef __RTMP_CORE_H_INCLUDED__
 #define __RTMP_CORE_H_INCLUDED__
 
+#include "rtmp_def.h"
+
 typedef struct rtmp_cycle_s         rtmp_cycle_t;
 typedef struct rtmp_module_s        rtmp_module_t;
 typedef struct rtmp_listening_s     rtmp_listening_t;
@@ -13,15 +15,6 @@ typedef struct rtmp_connection_s    rtmp_connection_t;
 typedef struct rtmp_session_s       rtmp_session_t;
 typedef struct rtmp_addr_port_s     rtmp_addr_port_t;
 typedef struct rtmp_addr_inet_s     rtmp_addr_inet_t;
-
-#define rtmp_abs(value)       (((value) >= 0) ? (value) : - (value))
-#define rtmp_max(val1, val2)  (((val1) < (val2)) ? (val2) : (val1))
-#define rtmp_min(val1, val2)  (((val1) > (val2)) ? (val2) : (val1))
-
-#define rtmp_array_size(x)    (sizeof(x)/sizeof((x)[0]))
-#define rtmp_hash(key, c)     ((uint32_t) key * 31 + c)
-
-#define rtmp_invaild_ptr      ((void*)(-1))
 
 #include "rtmp_array.h"
 
@@ -117,8 +110,8 @@ void rtmp_core_free_chain(rtmp_session_t *session,
 void rtmp_core_free_chains(rtmp_session_t *session,
     mem_pool_t *pool,mem_buf_chain_t *chain);
 
-int32_t rtmp_recv_buf(int sockfd,mem_buf_t *buf);
-int32_t rtmp_send_buf(int sockfd,mem_buf_t *buf);
+int32_t rtmp_recv_buf(int sockfd,mem_buf_t *buf,int32_t *n);
+int32_t rtmp_send_buf(int sockfd,mem_buf_t *buf,int32_t *n);
 
 void rtmp_chain_send(rtmp_event_t *ev);
 

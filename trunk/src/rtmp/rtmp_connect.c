@@ -194,7 +194,7 @@ static int32_t rtmp_connect_success_send(rtmp_session_t *session,
 
     h = &st->hdr;
 
-    rc = rtmp_create_append_chain(session,rtmp_create_window_ack_window,h);
+    rc = rtmp_create_append_chain(session,rtmp_create_ack_size,h);
     if (rc != RTMP_OK) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]append ack windows "
             "message failed!",session->sid);

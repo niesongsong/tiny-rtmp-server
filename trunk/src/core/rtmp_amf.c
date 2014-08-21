@@ -204,7 +204,7 @@ static amf_data_t* _amf_new_date(double n,uint16_t u)
         d->n_val = n;
 
         tz = (char*)d + sizeof(amf_t);
-        byte_write_int16((const char *)&u,tz);
+        ulong_make_byte2(tz,u);
         
         return (amf_data_t*)d;
     }
@@ -442,18 +442,18 @@ amf_data_t* amf_get_prop(amf_data_t *obj,const char* name)
 
 static amf_t* amf_decode_in(const char* buf,int *len)
 {
-    amf_t * data;
-    amf_t   tmp;
-    uint16_t tz;
-    volatile int16_t slen;
-    int32_t slen_l;
-    int last;
+    amf_t *     data;
+    amf_t       tmp;
+    uint16_t    tz;
+    int16_t     slen;
+    int32_t     slen_l;
+    int         last;
 
     if (*len <= 0) {
         return 0;
     }
 
-    byte_read_int8(buf,(char*)&tmp.type);
+    tmp.type = (uint8_t)buf[0];
 
     (*len)--;
     buf++;
@@ -465,7 +465,8 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_int64(buf,(char*)&tmp.n_val);
+        *((uint64_t*)(&tmp.n_val)) = byte_make_ulong8(buf);
+
         buf += 8;
         (*len) -= 8;
 
@@ -478,7 +479,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_int8(buf,(char*)&tmp.b_val);
+        tmp.b_val = (uint8_t)buf[0];
         (*len)--;
         buf++;
         
@@ -491,7 +492,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_int16(buf,(char*)&slen);
+        slen = byte_make_ulong2(buf);
         (*len) -= 2;
         buf += 2;
 
@@ -511,11 +512,11 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_int64(buf,(char*)&tmp.n_val);
+        *(uint64_t *)&tmp.n_val = byte_make_ulong8(buf);
         buf += 8;
         (*len) -= 8;
 
-        byte_read_int16(buf,(char*)&tz);
+        tz = byte_make_ulong2(buf);
         buf += 2;
         (*len) -= 2;
 
@@ -528,7 +529,7 @@ static amf_t* amf_decode_in(const char* buf,int *len)
             return 0;
         }
 
-        byte_read_int32(buf,(char*)&slen_l);
+        slen_l = byte_make_ulong4(buf);
         (*len) -= 4;
         buf += 4;
 
@@ -609,8 +610,7 @@ static int amf_encode_in_object(amf_t * d,char* buf,int *len)
             break;
         }
 
-        byte_write_int16((const char*)&slen,buf);
-
+        ulong_make_byte2(buf,slen);
         buf += 2;
         (*len) -= 2;
 
@@ -655,8 +655,7 @@ static amf_t* amf_decode_in_object(const char* buf,int *len)
             goto invalid;
         }
 
-        byte_read_int16(buf,(char*)&slen);
-
+        slen = byte_make_ulong2(buf);
         buf += 2;
         (*len) -= 2;
 
@@ -697,7 +696,7 @@ invalid:
 static int amf_encode_in(amf_data_t * data,char* buf,int *len)
 {
     amf_t * d;
-    uint32_t slen_l;
+    uint32_t slen_l,tz;
     int16_t slen;
     int rc,last;
 
@@ -707,8 +706,7 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
     }
 
     /*write type*/
-    byte_write_int8((const char*)&d->type,buf);
-
+    buf[0] = d->type;
     (*len)--;
     buf++;
 
@@ -717,8 +715,8 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
         if (*len < 8) {
             return -1;
         }
-
-        byte_write_int64((const char*)&d->n_val,buf);
+        
+        ulong_make_byte8(buf,*((uint64_t*)(&d->n_val)));
         buf += 8;
         (*len) -= 8;
 
@@ -729,7 +727,7 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_int8((const char*)&d->b_val,buf);
+        buf[0] = d->b_val;
         buf += 1;
         (*len) -= 1;
 
@@ -740,11 +738,14 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_int64((const char*)&d->n_val,buf);
+        ulong_make_byte8(buf,*(uint64_t*)&d->n_val);
+
         buf += 8;
         (*len) -= 8;
 
-        byte_write_int16((char*)d + sizeof(amf_t),buf);
+        tz = byte_make_ulong2((char*)d + sizeof(amf_t));
+        ulong_make_byte2(buf,tz);
+
         buf += 2;
         (*len) -= 2;
 
@@ -756,7 +757,7 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_int16((const char*)&slen,buf);
+        ulong_make_byte2(buf,slen);
         buf += 2;
         (*len) -= 2;
 
@@ -773,7 +774,8 @@ static int amf_encode_in(amf_data_t * data,char* buf,int *len)
             return -1;
         }
 
-        byte_write_int32((const char*)&slen_l,buf);
+        ulong_make_byte4(buf,slen_l);
+
         buf += 4;
         (*len) -= 4;
 
@@ -950,7 +952,7 @@ int amf_dump_data(amf_data_t *data)
         break;
 
     case amf_date:
-        byte_write_int16((char*)d + sizeof(amf_t),(char*)&tz);
+        tz = byte_make_ulong2((char*)d + sizeof(amf_t));
         printf("date %lf,%d",d->n_val,tz);
         
         break;

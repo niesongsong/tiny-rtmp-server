@@ -25,14 +25,22 @@ int32_t rtmp_recv_n(int sockfd,u_char *buf,int n)
     return recvd;
 }
 
-int32_t rtmp_recv_buf(int sockfd,mem_buf_t *rbuf)
+int32_t rtmp_recv_buf(int sockfd,mem_buf_t *rbuf,int32_t *sz)
 {
     int32_t  r,n;
+
+    if (sz != NULL) {
+        *sz = 0;
+    }
 
     while (rbuf->last != rbuf->end) {
 
         n = rbuf->end - rbuf->last;
         r = recv(sockfd,(char *)rbuf->last,n,0);
+
+        if (r > 0 && sz != NULL) {
+            *sz = r;
+        }
 
         if (r == -1 || r == 0) {
             if (sock_errno == SOCK_EAGAIN) {

@@ -6,6 +6,8 @@
 #include "rtmp_config.h"
 #include "rtmp_core.h"
 
+#if 0
+
 #define MAKE_ULONG3_B(p)                                      \
     ((uint32_t)((p)[0]) << 16) + ((uint32_t)((p)[1]) << 8)    \
     +(uint32_t)((p)[2])
@@ -16,11 +18,11 @@
 
 #define MAKE_ULONG4_B(p)                                      \
     ((uint32_t)((p)[0]) << 24) + ((uint32_t)((p)[1]) << 16)   \
-    +((uint32_t)((p)[2]) << 8)  + (uint32_t)((p)[3])
+   +((uint32_t)((p)[2]) << 8)  +  (uint32_t)((p)[3])
 
 #define MAKE_ULONG4_L(p)                                      \
     ((uint32_t)((p)[3]) << 24) + ((uint32_t)((p)[2]) << 16)   \
-    +((uint32_t)((p)[1]) << 8)  + (uint32_t)((p)[0])
+   +((uint32_t)((p)[1]) << 8)  +  (uint32_t)((p)[0])
 
 #define MAKE_BYTE4_L(p,ul)                                    \
     p[0] = (char)(ul);                                        \
@@ -44,6 +46,7 @@
     p[0] = (char)(ul);                                        \
     p[1] = (char)(ul >> 8);                                   \
     p[2] = (char)(ul >> 16)
+#endif
 
 uint8_t* rtmp_chunk_read(mem_buf_t *buf,rtmp_chunk_header_t *h)
 {
@@ -93,14 +96,14 @@ uint8_t* rtmp_chunk_read(mem_buf_t *buf,rtmp_chunk_header_t *h)
             return 0;
         }
 
-        h->dtime = MAKE_ULONG3_B(p);
+        h->dtime = byte_make_ulong3(p); 
         p += 3;
 
-        h->msglen = MAKE_ULONG3_B(p);
+        h->msglen = byte_make_ulong3(p);
         p += 3;
 
         h->msgtid = *p++;
-        h->msgsid = MAKE_ULONG4_L(p);
+        h->msgsid = byte_make_ulong4_l(p);
         p += 4;
 
         break;
@@ -111,10 +114,10 @@ uint8_t* rtmp_chunk_read(mem_buf_t *buf,rtmp_chunk_header_t *h)
             return 0;
         }
 
-        h->dtime = MAKE_ULONG3_B(p);
+        h->dtime = byte_make_ulong3(p);
         p += 3;
 
-        h->msglen = MAKE_ULONG3_B(p);
+        h->msglen = byte_make_ulong3(p);
         p += 3;
 
         h->msgtid = *p++;
@@ -127,7 +130,7 @@ uint8_t* rtmp_chunk_read(mem_buf_t *buf,rtmp_chunk_header_t *h)
             return 0;
         }
 
-        h->dtime = MAKE_ULONG3_B(p);
+        h->dtime = byte_make_ulong3(p);
         p += 3;
 
         break;
@@ -141,7 +144,7 @@ uint8_t* rtmp_chunk_read(mem_buf_t *buf,rtmp_chunk_header_t *h)
             return 0;
         }
 
-        h->extend = MAKE_ULONG4_B(p);
+        h->extend = byte_make_ulong4(p);
         p += 4;
     }
 
@@ -206,15 +209,15 @@ int32_t rtmp_chunk_write(mem_buf_t *buf,rtmp_chunk_header_t *h)
             return -1;
         }
 
-        MAKE_BYTE3_B(p,h->dtime);
+        ulong_make_byte3(p,h->dtime); 
         p += 3;
 
-        MAKE_BYTE3_B(p,h->msglen);
+        ulong_make_byte3(p,h->msglen);
         p += 3;
 
         *p++ = h->msgtid;
 
-        MAKE_BYTE4_L(p,h->msgsid);
+        ulong_make_byte4_l(p,h->msgsid);
         p += 4;
 
         break;
@@ -225,10 +228,10 @@ int32_t rtmp_chunk_write(mem_buf_t *buf,rtmp_chunk_header_t *h)
             return -1;
         }
 
-        MAKE_BYTE3_B(p,h->dtime);
+        ulong_make_byte3(p,h->dtime);
         p += 3;
 
-        MAKE_BYTE3_B(p,h->msglen);
+        ulong_make_byte3(p,h->msglen);
         p += 3;
 
         *p++ = h->msgtid;
@@ -241,7 +244,7 @@ int32_t rtmp_chunk_write(mem_buf_t *buf,rtmp_chunk_header_t *h)
             return -1;
         }
 
-        MAKE_BYTE3_B(p,h->dtime);
+        ulong_make_byte3(p,h->dtime);
         p += 3;
 
         break;
@@ -255,7 +258,7 @@ int32_t rtmp_chunk_write(mem_buf_t *buf,rtmp_chunk_header_t *h)
             return -1;
         }
 
-        MAKE_BYTE4_L(p,h->extend);
+        ulong_make_byte4_l(p,h->extend);
         p += 4;
     }
 

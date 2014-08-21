@@ -15,10 +15,12 @@
 
 struct rtmp_session_s {
     uint32_t                sid;                /*session id*/
-    uint32_t                ping_flag;          /*ping flag*/
+    uint32_t                send_ping : 1;      /*ping flag*/
+
+    uint32_t                in_bytes;
+    uint32_t                in_last_ack;
 
     rtmp_handshake_t        handshake;
-
     rtmp_chunk_stream_t   **streams;
     uint32_t                stream_time;
     uint32_t                last_stream;
@@ -44,6 +46,8 @@ struct rtmp_session_s {
 
     /*out*/
     mem_buf_chain_t       **out_message;    /*out message*/
+    rtmp_chunk_header_t     last_sent;
+
 
     uint32_t                out_front;      /*queue front*/
     uint32_t                out_rear;       /*queue rear*/

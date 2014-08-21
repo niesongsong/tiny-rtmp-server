@@ -9,7 +9,10 @@
 typedef mem_buf_chain_t* (*rtmp_create_proctol_message_ptr)
     (rtmp_session_t *session,rtmp_chunk_header_t *h);
 
-mem_buf_chain_t* rtmp_create_window_ack_window(rtmp_session_t *session,
+mem_buf_chain_t* rtmp_create_ack_size(rtmp_session_t *session,
+    rtmp_chunk_header_t *h);
+
+mem_buf_chain_t* rtmp_create_ack(rtmp_session_t *session,
     rtmp_chunk_header_t *h);
 
 mem_buf_chain_t* rtmp_create_peer_bandwidth_size(rtmp_session_t *session,

@@ -305,6 +305,7 @@ int32_t event_io_epoll_poll(rtmp_event_io_t *io, uint32_t msec, uint32_t flag)
                 queue = (queue_t *)& io->posted;
 
             }
+            rtmp_log(RTMP_LOG_DEBUG,"[%d]read event",c->fd);
             queue_push(queue,& rev->link);
         }
 
@@ -313,6 +314,8 @@ int32_t event_io_epoll_poll(rtmp_event_io_t *io, uint32_t msec, uint32_t flag)
         if ((revents & EPOLLOUT) && wev->active) {
             wev->ready = 1;
             queue_push(& io->posted,& wev->link);
+
+            rtmp_log(RTMP_LOG_DEBUG,"[%d]write event",c->fd);
         }
 
     }

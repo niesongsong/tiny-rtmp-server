@@ -12,6 +12,9 @@ int32_t rtmp_core_handle_recv(rtmp_session_t *session);
 int32_t rtmp_core_handle_message(rtmp_session_t *session,
     rtmp_chunk_stream_t *st);
 
+int32_t rtmp_core_update_inbytes(rtmp_session_t *session,
+    rtmp_chunk_header_t *h,uint32_t n);
+
 int32_t rtmp_core_message_info(rtmp_session_t *session,
     rtmp_chunk_header_t *h);
 
@@ -121,24 +124,24 @@ void rtmp_core_chunk_recv(rtmp_event_t *ev)
 {
     rtmp_connection_t   *conn;
     rtmp_session_t      *session;
-    int32_t              rc,hr;
-    
+    int32_t              rc,hr,n;
+
     conn = ev->data;
     session = conn->data;
-    
+
     if (ev->timer_set) {
         rtmp_event_del_timer(ev);
     }
 
     if (ev->timeout) {
 
-        if (session->ping_flag == 1) {
+        if (session->send_ping == 1) {
             rtmp_log(RTMP_LOG_INFO,"[%d]recv timeout!",session->sid);
             rtmp_session_destroy(session);
             return;
         }
 
-        session->ping_flag = 1;
+        session->send_ping = 1;
 
         rtmp_send_ping_request(session);
         rtmp_event_add_timer(ev,session->ping);
@@ -147,22 +150,26 @@ void rtmp_core_chunk_recv(rtmp_event_t *ev)
     }
 
     for (;;) {
-        /*recv*/
-        rc = rtmp_recv_buf(conn->fd,&session->in_chain->chunk);
-
+        rc = rtmp_recv_buf(conn->fd,&session->in_chain->chunk,&n);
         if (rc == SOCK_ERROR) {
+            rtmp_session_destroy(session);
+            return ;
+        }
+
+        session->send_ping = 0;
+
+        hr = rtmp_core_update_inbytes(session,NULL,(uint32_t)n);
+        if(hr != RTMP_OK) {
             rtmp_session_destroy(session);
             return ;
         }
 
         /*rtmp_core_handle_recv*/
         hr = rtmp_core_handle_recv(session);
-        if (hr == RTMP_FAILED) {
+        if (hr != RTMP_OK) {
             rtmp_session_destroy(session);
             return ;
         }
-
-        session->ping_flag = 0;
 
         if(rc == SOCK_EAGAIN) {
             if (!ev->active) {
@@ -369,7 +376,7 @@ void rtmp_chain_send(rtmp_event_t *ev)
             rtmp_log(RTMP_LOG_DEBUG,"[%d] send  [%d] bytes",session->sid,
                 wbuf.end - wbuf.last);
 
-            rc = rtmp_send_buf(conn->fd,&wbuf);
+            rc = rtmp_send_buf(conn->fd,&wbuf,NULL);
 
             if (rc == SOCK_ERROR) {
                 rtmp_log(RTMP_LOG_ERR,"[%d] send error:%d",session->sid,rc);
@@ -390,6 +397,8 @@ void rtmp_chain_send(rtmp_event_t *ev)
                 return ;
             }
 
+            session->send_ping = 0;
+
             chain = session->out_chunk->next;
             session->out_chunk = chain;
 
@@ -399,12 +408,14 @@ void rtmp_chain_send(rtmp_event_t *ev)
         }
 
         chain = session->out_message[out_rear];
+        
+        rtmp_log(RTMP_LOG_INFO,"[%d]send a message",session->sid);
+
         rtmp_core_free_chain(session,session->chunk_pool,chain);
 
         session->out_message[out_rear] = NULL;
         session->out_last = NULL;
 
-        /*next message*/
         session->out_rear = (out_rear + 1) % session->out_queue; 
     }
 
@@ -646,4 +657,30 @@ uint32_t rtmp_hash_key(const u_char *data, size_t len)
     }
 
     return key;
+}
+
+int32_t rtmp_core_update_inbytes(rtmp_session_t *session,
+    rtmp_chunk_header_t *h,uint32_t n)
+{
+    int32_t      rc;
+
+    session->in_bytes += n;
+    if (session->in_bytes >= 0xf0000000) {
+        session->in_bytes = 0;
+        session->in_last_ack = 0;
+        rtmp_log(RTMP_LOG_DEBUG,"reset byte counter");
+    }
+
+    n = session->in_bytes - session->in_last_ack;
+    if (n > session->ack_window) {
+        session->in_last_ack = session->in_bytes;
+        rc = rtmp_create_append_chain(session,rtmp_create_ack,h);
+        if (rc != RTMP_OK) {
+            rtmp_log(RTMP_LOG_WARNING,"[%d]append ack "
+                "message failed!",session->sid);
+            return RTMP_FAILED;
+        }
+    }
+
+    return RTMP_OK;
 }

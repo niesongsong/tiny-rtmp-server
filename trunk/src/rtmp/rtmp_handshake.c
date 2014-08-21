@@ -112,7 +112,6 @@ void rtmp_handshake_recv(rtmp_event_t *ev)
     hs = &session->handshake;
 
     if (ev->timeout) {
-
         rtmp_session_destroy(session);
         return;
     }
@@ -121,7 +120,7 @@ void rtmp_handshake_recv(rtmp_event_t *ev)
         rtmp_event_del_timer(ev);
     }
 
-    rc = rtmp_recv_buf(conn->fd, &hs->rbuf);
+    rc = rtmp_recv_buf(conn->fd, &hs->rbuf,NULL);
     if (rc == SOCK_EAGAIN) {
         if (!ev->active) {
             rtmp_event_add(ev,EVENT_READ);
@@ -201,7 +200,7 @@ void rtmp_handshake_recv(rtmp_event_t *ev)
         break;
 
     default:
-        rtmp_log(RTMP_LOG_ERR,"unknown stage");
+        rtmp_log(RTMP_LOG_ERR,"unknown stage[%d]",hs->stage);
         rtmp_session_destroy(session);
         break;
     }
@@ -229,7 +228,7 @@ void rtmp_handshake_send(rtmp_event_t *ev)
         rtmp_event_del_timer(ev);
     }
 
-    rc = rtmp_send_buf(conn->fd, &hs->wbuf);
+    rc = rtmp_send_buf(conn->fd, &hs->wbuf,NULL);
     if (rc == SOCK_EAGAIN) {    
         rtmp_log(RTMP_LOG_DEBUG,"[%d] send error:%d",session->sid,rc);
 
@@ -301,7 +300,7 @@ void rtmp_handshake_send(rtmp_event_t *ev)
         break;
 
     default:
-        rtmp_log(RTMP_LOG_ERR,"unknown stage");
+        rtmp_log(RTMP_LOG_ERR,"unknown stage[%d]",hs->stage);
         rtmp_session_destroy(session);
         break;
     }
@@ -385,10 +384,10 @@ static int32_t rtmp_handshake_prepare_send_s0s1(rtmp_session_t *session)
     if (*c0 != 0x03) {
         return RTMP_FAILED;
     }
-    byte_read_int32((char *)c1,(char *)&handshake->peer_epoch);
 
+    handshake->peer_epoch = byte_make_ulong4(c1);
     *s0 = 0x03;
-    byte_write_int32((char*)&rtmp_current_sec,(char*)s1);
+    ulong_make_byte4(s1,rtmp_current_sec);
     memset(s1 + 4, 0, 4);
     byte_fill_random((char*)s1+8,1528);
     
