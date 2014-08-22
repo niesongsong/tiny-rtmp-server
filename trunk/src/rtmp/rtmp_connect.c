@@ -15,9 +15,9 @@
         if (pr) {                                                       \
             val = amf_get_string(pr);                                   \
             if (val == NULL) break;                                     \
-            session->member = (char*)mem_pcalloc(session->pool,len+1);  \
-            if (session->member) {                                      \
-                strncpy(session->member,val,len - 1);                   \
+            conn->member = (char*)mem_pcalloc(session->pool,len+1);     \
+            if (conn->member) {                                         \
+                strncpy(conn->member,val,len - 1);                      \
             }                                                           \
         }                                                               \
     }while(0)
@@ -27,7 +27,7 @@
         amf_data_t *pr;                                                 \
         pr = amf_get_prop(amf,key);                                     \
         if (pr) {                                                       \
-            session->member = amf_get_number(pr);                       \
+            conn->member = amf_get_number(pr);                          \
         }                                                               \
     }while(0)
 
@@ -52,6 +52,7 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
     struct sockaddr_in *addr_in;
     rtmp_host_t       **host;
     rtmp_app_t         *app;
+    rtmp_session_connect_t *conn;
 
     if (num < 3) {
         rtmp_log(RTMP_LOG_ERR,"amf number[%d] error!",num);
@@ -66,10 +67,13 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
 
     rc = rtmp_amf_parse_connect(session,amf[2]);
     if (rc != RTMP_OK) {
-        rtmp_log(RTMP_LOG_ERR,"connect app parse failed!");
+        rtmp_log(RTMP_LOG_ERR,"[%d]rtmp_amf_parse_connect() failed!",
+            session->sid);
         return RTMP_FAILED;
     }
-    session->trans = transmitid;
+
+    conn = session->conn;
+    conn->trans = transmitid;
 
     addr = session->c->listening->data;
     if (addr->addr.sin_addr.s_addr == INADDR_ANY) {
@@ -89,7 +93,7 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
     /*check vhost*/
     host = addr->hosts.elts;
     for (h = 0; h < (int32_t)addr->hosts.nelts;h++) {
-        if (strcmp(host[h]->name,session->vhost) == 0) {
+        if (strcmp(host[h]->name,conn->vhost) == 0) {
             session->host_ctx = host[h];
             break;
         }
@@ -101,7 +105,7 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
 
     if (session->host_ctx == 0) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]check vhost:\"%s\" not found!",
-            session->sid,session->vhost);
+            session->sid,conn->vhost);
         return RTMP_FAILED;
     }
     
@@ -109,11 +113,10 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
         session->sid,session->host_ctx->name);
 
     /*find app*/
-    session->app_ctx = rtmp_app_conf_find(session->app,
-        &session->host_ctx->apps);
+    session->app_ctx = rtmp_app_conf_find(conn->app,&session->host_ctx->apps);
     if (session->app_ctx == NULL) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]check app=\"%s\" not found!",
-            session->sid,session->app);
+            session->sid,conn->app);
 
         /*send connect result*/
         (void)rtmp_connect_failed_send(session,st);
@@ -122,7 +125,7 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
     app = session->app_ctx;
 
     rtmp_log(RTMP_LOG_INFO,"[%d]check app=\"%s\" args=\"%s\" found!",
-        session->sid,session->app,session->args?session->args:"(null)");
+        session->sid,conn->app,conn->args?conn->args:"(null)");
 
     session->chunk_pool = app->chunk_pool;
     if (app->conf->chunk_size) {
@@ -134,11 +137,19 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
 
 int32_t rtmp_amf_parse_connect(rtmp_session_t *session,amf_data_t *amf)
 {
-    char  *vhost,*ch;
+    char                   *vhost,*ch;
+    rtmp_session_connect_t *conn;
 
-    if (session->vhost != NULL) {
+    if (session->conn != NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]connect app \"%s\" duplicate!",
-            session->sid,session->app);
+            session->sid,session->conn->app);
+        return RTMP_FAILED;
+    }
+
+    conn = mem_pcalloc(session->pool,sizeof(rtmp_session_connect_t));
+    if (conn == NULL) {
+        rtmp_log(RTMP_LOG_ERR,"[%d]connect app \"%s\" memory failed!",
+            session->sid);
         return RTMP_FAILED;
     }
 
@@ -149,7 +160,7 @@ int32_t rtmp_amf_parse_connect(rtmp_session_t *session,amf_data_t *amf)
     conn_app_set_string("pageUrl",page_url,RTMP_CONN_URL_SIZE_MAX);
     conn_app_set_string("flashVer",flashver,RTMP_CONN_VER_SIZE_MAX);
 
-    if (!session->app || !session->tc_url) {
+    if (!conn->app || !conn->tc_url) {
         return RTMP_FAILED;
     }
 
@@ -158,11 +169,11 @@ int32_t rtmp_amf_parse_connect(rtmp_session_t *session,amf_data_t *amf)
     conn_app_set_number("objectEncoding",object_encoding);
 
     /*get host*/
-    if (memcmp("rtmp://",session->tc_url,7) != 0) {
+    if (memcmp("rtmp://",conn->tc_url,7) != 0) {
         return RTMP_FAILED;
     }
     
-    vhost = mem_dup_str(session->tc_url+7,session->pool);
+    vhost = mem_dup_str(conn->tc_url+7,session->pool);
     strtok(vhost,":/");
 
     ch = vhost;
@@ -173,16 +184,17 @@ int32_t rtmp_amf_parse_connect(rtmp_session_t *session,amf_data_t *amf)
         }
     }
     
-    session->vhost = vhost;
-    ch = strchr(session->app,'?');
+    conn->vhost = vhost;
+    ch = strchr(conn->app,'?');
     if (ch) {
         *ch++ = 0;
-        session->args = mem_pcalloc(session->pool,RTMP_CONN_ARGS_SIZE_MAX);
-        if (session->args) {
-            strncpy(session->args,ch,RTMP_CONN_ARGS_SIZE_MAX - 1);
+        conn->args = mem_pcalloc(session->pool,RTMP_CONN_ARGS_SIZE_MAX);
+        if (conn->args) {
+            strncpy(conn->args,ch,RTMP_CONN_ARGS_SIZE_MAX - 1);
         }
     }
 
+    session->conn = conn;
     return RTMP_OK;
 }
 
@@ -259,7 +271,7 @@ static uint32_t rtmp_connect_amf_result(rtmp_session_t *session,
             amf_new_string("Connection succeeded.",0));
 
         amf_put_prop(amf[3],"objectEncoding",
-            amf_new_number(session->object_encoding));
+            amf_new_number(session->conn->object_encoding));
 
         ecma = amf_new_ecma_array();
         if (ecma) {

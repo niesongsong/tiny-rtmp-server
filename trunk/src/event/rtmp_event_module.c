@@ -26,9 +26,6 @@ int32_t event_io_accept_disable(rtmp_cycle_t *cycle);
 extern void rtmp_event_accept(rtmp_event_t *ev);
 
 typedef struct rtmp_event_ctx_s {
-    queue_t         read;
-    queue_t         write;
-
     uint32_t        max_conn;
     uint32_t        use;
 
@@ -471,14 +468,6 @@ void rtmp_event_accept(rtmp_event_t *ev)
             break;
         }
 
-        if (ctx->event_io.type == EVENT_IO_EPOLL) {
-            if (rtmp_event_add_conn(client) == (uint32_t)-1) {
-                rtmp_log(RTMP_LOG_WARNING,"rtmp_event_add_conn() failed!");
-                closesocket(fd);
-                return ;
-            }
-        }
-
         ls->handler(client);
     } while (1);
 
@@ -492,7 +481,7 @@ uint32_t rtmp_event_add_conn(rtmp_connection_t *c)
 
     ctx = rtmp_event_module.ctx;
 
-    rtmp_log(RTMP_LOG_DEBUG,"add connection:%p",c);
+    rtmp_log(RTMP_LOG_DEBUG,"[%d]add connection:%d",c->fd);
 
     io = &ctx->event_io;
     if (io->io_add_conn) {
@@ -508,7 +497,7 @@ uint32_t rtmp_event_delete_conn(rtmp_connection_t *c)
     rtmp_event_io_t     *io;
 
     ctx = rtmp_event_module.ctx;
-    rtmp_log(RTMP_LOG_DEBUG,"delete connection:%p",c);
+    rtmp_log(RTMP_LOG_DEBUG,"[%d]delete connection:%p",c->fd,c);
 
     io = &ctx->event_io;
     if (io->io_del_conn) {

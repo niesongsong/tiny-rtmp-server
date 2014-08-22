@@ -63,7 +63,8 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
         session->lives[i] = RTMP_NULL;
     }
 
-    if (rtmp_handshake_alloc(pool,&session->handshake) != RTMP_OK) {
+    session->handshake = rtmp_handshake_alloc(pool);
+    if (session->handshake == NULL) {
         return NULL;
     }
 

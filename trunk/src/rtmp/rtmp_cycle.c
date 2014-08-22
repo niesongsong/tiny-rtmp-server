@@ -47,6 +47,11 @@ static uint32_t rtmp_os_init(void)
     }
     return RTMP_OK;
 #else
+
+    if (rtmp_init_signals() != 0) {
+        return RTMP_FAILED;
+    }
+
     return RTMP_OK;
 #endif
 }

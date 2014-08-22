@@ -125,6 +125,8 @@ int queue_length(queue_t * q)
     return i;
 }
 
+#if 0
+
 void stack_init(stack_t *st)
 {
     _link_init(st); 
@@ -158,3 +160,5 @@ int stack_dept(stack_t *st)
 
     return i;
 }
+
+#endif

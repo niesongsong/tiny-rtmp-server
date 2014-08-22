@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <signal.h>
 
 #define HAVE_USING_LEDIAN   1
 #define HAVE_EVENT_EPOLL    1
@@ -46,5 +47,7 @@ typedef int   socket_t;
 #define set_nonblocking(s) fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK)
 #define set_blocking(s)    fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK)
 int set_tcppush(socket_t s);
+
+int rtmp_init_signals();
 
 #endif

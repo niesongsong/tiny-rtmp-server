@@ -109,7 +109,7 @@ void rtmp_handshake_recv(rtmp_event_t *ev)
 
     conn = ev->data;
     session = conn->data;
-    hs = &session->handshake;
+    hs = session->handshake;
 
     if (ev->timeout) {
         rtmp_session_destroy(session);
@@ -217,7 +217,7 @@ void rtmp_handshake_send(rtmp_event_t *ev)
 
     conn = ev->data;
     session = conn->data;
-    hs = & session->handshake;
+    hs = session->handshake;
 
     if (ev->timeout) {
         rtmp_session_destroy(session);
@@ -308,19 +308,24 @@ void rtmp_handshake_send(rtmp_event_t *ev)
     return ;
 }
 
-int32_t rtmp_handshake_alloc(mem_pool_t *pool,rtmp_handshake_t *handshake)
+rtmp_handshake_t* rtmp_handshake_alloc(mem_pool_t *pool)
 {
     mem_buf_t        *r,*w;
-    u_char           *buf;
+    uint8_t          *buf;
+    rtmp_handshake_t *handshake;
 
-    memset(handshake,0,sizeof(sizeof(rtmp_handshake_t)));
+    handshake = mem_pcalloc(pool,
+        sizeof(rtmp_handshake_t) + HANDSHAKE_BUF_LEN*2);
+    if (handshake == NULL) {
+        return NULL;
+    }
 
+    buf = (uint8_t *)handshake + sizeof(rtmp_handshake_t);
     r = &handshake->rbuf;
     w = &handshake->wbuf;
 
-    buf = mem_pcalloc(pool,HANDSHAKE_BUF_LEN*2);
     if (buf == NULL) {
-        return RTMP_FAILED;
+        return NULL;
     }
 
     r->buf = buf;
@@ -331,7 +336,7 @@ int32_t rtmp_handshake_alloc(mem_pool_t *pool,rtmp_handshake_t *handshake)
     w->last = w->buf;
     w->end = w->buf + HANDSHAKE_BUF_LEN;
 
-    return RTMP_OK;
+    return handshake;
 }
 
 static int32_t rtmp_handshake_prepare_send_c0c1(rtmp_session_t *session)
@@ -360,7 +365,7 @@ static void rtmp_handshake_prepare_recv_c0c1(rtmp_session_t *session)
     mem_buf_t           *r,*w;
     rtmp_handshake_t    *h;
 
-    h = & session->handshake;
+    h = session->handshake;
 
     r = & h->rbuf;
     w = & h->wbuf;
@@ -374,7 +379,7 @@ static int32_t rtmp_handshake_prepare_send_s0s1(rtmp_session_t *session)
     uint8_t             *c0,*c1,*s0,*s1;
     rtmp_handshake_t    *handshake;
 
-    handshake = & session->handshake;
+    handshake = session->handshake;
 
     c0 = handshake->rbuf.buf;
     c1 = c0 + 1;
@@ -408,7 +413,7 @@ static int32_t rtmp_handshake_prepare_send_s2(rtmp_session_t *session)
     uint8_t              digest[32],*d,*p[4];
     uint32_t             x;
 
-    handshake = & session->handshake;
+    handshake = session->handshake;
 
     c0 = handshake->rbuf.buf;
     c1 = c0 + 1;
@@ -474,7 +479,7 @@ static int32_t rtmp_handshake_prepare_recv_c2(rtmp_session_t *session)
     mem_buf_t           *r,*w;
     rtmp_handshake_t    *h;
 
-    h = & session->handshake;
+    h = session->handshake;
 
     r = & h->rbuf;
     w = & h->wbuf;

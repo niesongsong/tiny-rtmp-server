@@ -28,16 +28,19 @@ int32_t rtmp_server_handshake(rtmp_session_t *session)
 {
     rtmp_connection_t   *c;
     rtmp_event_t        *rev,*wev;
+    rtmp_handshake_t    *h;
 
     c = session->c;
     rev = c->read;
     wev = c->write;
 
+    h = session->handshake;
+
     rev->handler = rtmp_handshake_recv;
     wev->handler = rtmp_handshake_send;
     
-    session->handshake.stage = RTMP_HANDSHAKE_SERVER_INIT;
-    session->handshake.rbuf.end = session->handshake.rbuf.buf;
+    h->stage = RTMP_HANDSHAKE_SERVER_INIT;
+    h->rbuf.end = h->rbuf.buf;
 
     rtmp_handshake_recv(rev);
     
@@ -48,16 +51,19 @@ int32_t rtmp_client_handshake(rtmp_session_t *session)
 {
     rtmp_connection_t   *c;
     rtmp_event_t        *rev,*wev;
+    rtmp_handshake_t    *h;
 
     c = session->c;
     rev = c->read;
     wev = c->write;
 
+    h = session->handshake;
+
     rev->handler = rtmp_handshake_recv;
     wev->handler = rtmp_handshake_send;
 
-    session->handshake.stage = RTMP_HANDSHAKE_CLIENT_INIT;
-    session->handshake.wbuf.end = session->handshake.wbuf.buf;
+    h->stage = RTMP_HANDSHAKE_CLIENT_INIT;
+    h->wbuf.end = h->wbuf.buf;
 
     rtmp_handshake_send(wev);
 
@@ -76,7 +82,7 @@ void rtmp_core_init_connnect(rtmp_connection_t *conn)
     }
 
     conn->data = session;
-    session->handshake.stage = RTMP_HANDSHAKE_SERVER_C0C1;
+    session->handshake->stage = RTMP_HANDSHAKE_SERVER_C0C1;
 
     rtmp_server_handshake(session);
 
@@ -152,6 +158,8 @@ void rtmp_core_chunk_recv(rtmp_event_t *ev)
     for (;;) {
         rc = rtmp_recv_buf(conn->fd,&session->in_chain->chunk,&n);
         if (rc == SOCK_ERROR) {
+            rtmp_log(RTMP_LOG_ERR,"[%d]recv error[%d]!",
+                session->sid,sock_errno);
             rtmp_session_destroy(session);
             return ;
         }

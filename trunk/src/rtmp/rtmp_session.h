@@ -13,6 +13,21 @@
 #define RTMP_CONN_ARGS_SIZE_MAX          256
 #define RTMP_CONN_VER_SIZE_MAX           32
 
+typedef struct rtmp_session_connect_s rtmp_session_connect_t;
+struct rtmp_session_connect_s {
+    char    *app;
+    char    *args;
+    char    *flashver;
+    char    *swf_url;
+    char    *tc_url;
+    char    *page_url;
+    char    *vhost;
+    double   trans;
+    double   acodecs;
+    double   vcodecs;
+    double   object_encoding; 
+};
+
 struct rtmp_session_s {
     uint32_t                sid;                /*session id*/
     uint32_t                send_ping : 1;      /*ping flag*/
@@ -20,7 +35,9 @@ struct rtmp_session_s {
     uint32_t                in_bytes;
     uint32_t                in_last_ack;
 
-    rtmp_handshake_t        handshake;
+    rtmp_handshake_t       *handshake;
+    rtmp_session_connect_t *conn;
+
     rtmp_chunk_stream_t   **streams;
     uint32_t                stream_time;
     uint32_t                last_stream;
@@ -48,7 +65,6 @@ struct rtmp_session_s {
     mem_buf_chain_t       **out_message;    /*out message*/
     rtmp_chunk_header_t     last_sent;
 
-
     uint32_t                out_front;      /*queue front*/
     uint32_t                out_rear;       /*queue rear*/
     uint32_t                out_queue;      /*queue capacity*/
@@ -56,18 +72,6 @@ struct rtmp_session_s {
     mem_buf_chain_t        *out_chunk;      /*current chunk in current chain*/
     uint8_t                *out_last;       /*last out position*/
     uint32_t                out_chunk_size;
-
-    char                   *app;
-    char                   *args;
-    char                   *flashver;
-    char                   *swf_url;
-    char                   *tc_url;
-    char                   *page_url;
-    char                   *vhost;
-    double                  trans;
-    double                  acodecs;
-    double                  vcodecs;
-    double                  object_encoding; 
 };
 
 rtmp_session_t *rtmp_session_create(rtmp_connection_t *);

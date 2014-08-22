@@ -9,7 +9,10 @@
 typedef struct link_s link_t;
 typedef struct link_s list_t;
 typedef struct link_s queue_t;
+
+#if 0
 typedef struct link_s stack_t;
+#endif
 
 struct link_s {
     struct link_s * prev;
@@ -43,9 +46,11 @@ link_t * queue_rear(queue_t * q);
 int queue_length(queue_t * q);
 
 /*stack interface*/
+#if 0
 void stack_init(stack_t *st);
 void stack_push(stack_t *st,link_t *n);
 link_t * stack_pop(stack_t *st);
 int stack_dept(stack_t *st);
+#endif
 
 #endif

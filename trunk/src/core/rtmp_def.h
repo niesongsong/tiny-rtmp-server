@@ -15,4 +15,12 @@
 
 #define rtmp_invaild_ptr      ((void*)(-1))
 
+typedef struct rtmp_cycle_s         rtmp_cycle_t;
+typedef struct rtmp_module_s        rtmp_module_t;
+typedef struct rtmp_listening_s     rtmp_listening_t;
+typedef struct rtmp_connection_s    rtmp_connection_t;
+typedef struct rtmp_session_s       rtmp_session_t;
+typedef struct rtmp_addr_port_s     rtmp_addr_port_t;
+typedef struct rtmp_addr_inet_s     rtmp_addr_inet_t;
+
 #endif

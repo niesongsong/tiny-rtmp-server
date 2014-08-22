@@ -28,6 +28,6 @@ typedef struct rtmp_handshake_s{
 void rtmp_core_handshake_init();
 void rtmp_handshake_recv(rtmp_event_t *ev);
 void rtmp_handshake_send(rtmp_event_t *ev);
-int32_t rtmp_handshake_alloc(mem_pool_t *,rtmp_handshake_t *);
+rtmp_handshake_t* rtmp_handshake_alloc(mem_pool_t *);
 
 #endif

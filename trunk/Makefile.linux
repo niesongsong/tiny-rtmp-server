@@ -36,6 +36,7 @@ CORE_OBJS =	objs/core/rtmp_amf.o \
 	objs/os/unix/rtmp_shmem.o \
 	objs/os/unix/rtmp_socket.o\
 	objs/os/unix/rtmp_atomic.o \
+	objs/os/unix/rtmp_signal.o \
 	objs/os/unix/rtmp_event_select.o \
 	objs/os/unix/rtmp_event_epoll.o \
 	objs/rtmp/rtmp_host_module.o\
@@ -172,6 +173,12 @@ objs/os/unix/rtmp_atomic.o:	$(CORE_DEPS) \
 		-o objs/os/unix/rtmp_atomic.o \
 		src/os/unix/rtmp_atomic.c
 
+objs/os/unix/rtmp_signal.o:	$(CORE_DEPS) \
+	src/os/unix/rtmp_signal.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/os/unix/rtmp_signal.o \
+		src/os/unix/rtmp_signal.c
+		
 objs/os/unix/rtmp_event_select.o:	$(CORE_DEPS) \
 	src/os/unix/rtmp_event_select.c
 	$(CC) -c $(CFLAGS) $(CORE_INCS) \
