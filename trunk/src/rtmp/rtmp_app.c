@@ -110,11 +110,11 @@ rtmp_live_stream_t* rtmp_app_live_alloc(rtmp_app_t *app,
 
     if (live) {
         live->epoch = rtmp_current_sec;
+        live->timestamp = 0;
         strncpy(live->name,livestream,63);
 
-        list_init(&live->players);
-
         live->publisher = NULL;
+        live->players = NULL;
 
         k = rtmp_hash_string(livestream);
         h = app->lives + (k % app->conf->stream_buckets);
@@ -146,9 +146,12 @@ void rtmp_app_live_release(rtmp_live_link_t *link)
         live->publisher = NULL;
     } else {
         list_remove(&link->link);
+        if (link == live->players) {
+            live->players = NULL;
+        }
     }
 
-    if ((live->publisher == NULL) && list_empty(&live->players)) {
+    if ((live->publisher == NULL) && (live->players == NULL)) {
 
         rtmp_log(RTMP_LOG_DEBUG,"[%d]free live[%s]",
             link->session->sid,live->name);

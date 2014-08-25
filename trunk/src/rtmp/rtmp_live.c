@@ -66,30 +66,41 @@ int32_t rtmp_handler_avdata(rtmp_session_t *session,rtmp_chunk_stream_t *st)
     }
 
     live = link->lvst;
-    next = live->players.next;
 
     /*broad cast*/
-    while (next != &live->players) {
-        client = struct_entry(next,rtmp_live_link_t,link);
-        next = client->link.next;
+    if (live->players) {
 
-        if (client->session == NULL) {
-            list_remove(&client->link);
-            rtmp_log(RTMP_LOG_WARNING,"[%d]invalid session!",
-                session->sid);
-            continue;
-        }
+        next = &live->players->link;
+        do {
+            client = struct_entry(next,rtmp_live_link_t,link);
+            next = client->link.next;
 
-        rc = rtmp_live_send_avdata(client,st,chain);
+            if (client->session == NULL) {
+                
+                list_remove(&client->link);
+                rtmp_log(RTMP_LOG_WARNING,"[%d]invalid session!",
+                    session->sid);
 
-        if (rc != RTMP_OK) {
-            rtmp_log(RTMP_LOG_WARNING,"[%d]send avdata[%d]",
-                client->session->sid,rc);
-            continue;
-        }
+                if (client == live->players) {
+                    live->players = NULL;
 
-        rtmp_log(RTMP_LOG_DEBUG,"[%d]send avdata",
-            client->session->sid);
+                    break;
+                }
+
+                continue;
+            }
+
+            rc = rtmp_live_send_avdata(client,st,chain);
+
+            if (rc != RTMP_OK) {
+                rtmp_log(RTMP_LOG_WARNING,"[%d]send avdata[%d]",
+                    client->session->sid,rc);
+                continue;
+            }
+
+            rtmp_log(RTMP_LOG_DEBUG,"[%d]send av data",
+                client->session->sid);
+        }while (next != &live->players->link);
     }
 
     rtmp_core_free_chains(session,session->chunk_pool,chain);

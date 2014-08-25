@@ -311,11 +311,11 @@ int32_t rtmp_append_message_chain(rtmp_session_t *session,
 
     front = (front + 1) % session->out_queue;
     if (front == session->out_rear) {
-        rtmp_log(RTMP_LOG_WARNING,"message queue full!");
+        rtmp_log(RTMP_LOG_WARNING,"message queue full, droped!");
         return RTMP_FAILED;
     }
 
-    session->out_message[session->out_front] = chain;
+    session->out_chain[session->out_front] = chain;
     session->out_front = front;
 
     return RTMP_OK;
@@ -465,19 +465,15 @@ mem_buf_chain_t*
 rtmp_create_ping_request(rtmp_session_t *session,uint32_t timestamp)
 {
     mem_buf_chain_t *chain;
-    uint16_t         type;
+    uint8_t         *last;
 
     chain = rtmp_create_proctol_message(session,RTMP_MSG_USER,6);
     if (chain) {
-        type = RTMP_USER_PING_REQUEST;
-        
-        chain->chunk.last[0] = (uint8_t)((type & 0xff00) >> 8);
-        chain->chunk.last[1] = (uint8_t)(type & 0x00ff);
-        
-        chain->chunk.last[2] = (uint8_t)(timestamp & 0xff000000 >> 24);
-        chain->chunk.last[3] = (uint8_t)(timestamp & 0x0000ff00 >> 16);
-        chain->chunk.last[4] = (uint8_t)(timestamp & 0x00ff0000 >> 8);
-        chain->chunk.last[5] = (uint8_t)(timestamp & 0x000000ff);
+
+        last = chain->chunk.last;
+
+        ulong_make_byte4(last,RTMP_USER_PING_REQUEST);
+        ulong_make_byte4(last+2,timestamp);
 
         chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
@@ -489,20 +485,15 @@ mem_buf_chain_t*
 rtmp_create_ping_response(rtmp_session_t *session,uint32_t timestamp)
 {
     mem_buf_chain_t *chain;
-    uint16_t         type;
+    uint8_t         *last;
 
     chain = rtmp_create_proctol_message(session,RTMP_MSG_USER,6);
     if (chain) {
-        type = RTMP_USER_PING_RESPONSE;
+        last = chain->chunk.last;
 
-        chain->chunk.last[0] = (uint8_t)((type & 0xff00) >> 8);
-        chain->chunk.last[1] = (uint8_t)(type & 0x00ff);
-
-        chain->chunk.last[2] = (uint8_t)(timestamp & 0xff000000 >> 24);
-        chain->chunk.last[3] = (uint8_t)(timestamp & 0x0000ff00 >> 16);
-        chain->chunk.last[4] = (uint8_t)(timestamp & 0x00ff0000 >> 8);
-        chain->chunk.last[5] = (uint8_t)(timestamp & 0x000000ff);
-
+        ulong_make_byte4(last,RTMP_USER_PING_RESPONSE);
+        ulong_make_byte4(last+2,timestamp);
+  
         chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 

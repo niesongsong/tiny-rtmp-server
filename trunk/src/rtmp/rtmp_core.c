@@ -213,17 +213,17 @@ int32_t rtmp_core_handle_recv(rtmp_session_t *session)
         if (hdr.csid >= session->max_streams) {
 
             old_size = session->max_streams * sizeof(rtmp_chunk_stream_t*);
-            old_streams = session->streams;
+            old_streams = session->chunk_streams;
 
-            session->streams = mem_pcalloc(session->pool,
+            session->chunk_streams = mem_pcalloc(session->pool,
                 (hdr.csid + 1) * sizeof(rtmp_chunk_stream_t*));
-            if (session->streams == NULL) {
+            if (session->chunk_streams == NULL) {
                 rtmp_log(RTMP_LOG_ERR,"alloc failed,csid:[%d]",hdr.csid);
                 return RTMP_FAILED;
             }
 
             session->max_streams = hdr.csid + 1;
-            memcpy(session->streams,old_streams,old_size);
+            memcpy(session->chunk_streams,old_streams,old_size);
         }
 
         /*get message info*/
@@ -234,14 +234,14 @@ int32_t rtmp_core_handle_recv(rtmp_session_t *session)
             return RTMP_FAILED;
         }
 
-        st = session->streams[hdr.csid];
+        st = session->chunk_streams[hdr.csid];
         if (st == NULL) {
             st = mem_pcalloc(session->pool,sizeof(rtmp_chunk_stream_t));
             if (st == NULL) {
                 rtmp_log(RTMP_LOG_ERR,"alloc failed,csid:[%d]",hdr.csid);
                 return RTMP_FAILED;
             }
-            session->streams[hdr.csid] = st;
+            session->chunk_streams[hdr.csid] = st;
         }
 
         if (st->recvlen == 0) {
@@ -353,7 +353,7 @@ void rtmp_chain_send(rtmp_event_t *ev)
                 return ;
             }
 
-            session->out_chunk = session->out_message[out_rear];
+            session->out_chunk = session->out_chain[out_rear];
             if (session->out_chunk == NULL) {
 
                 rtmp_log(RTMP_LOG_WARNING,"[%d] pick null message",
@@ -381,13 +381,13 @@ void rtmp_chain_send(rtmp_event_t *ev)
             wbuf.last = session->out_last;
             wbuf.end = sbuf->end;
 
-            rtmp_log(RTMP_LOG_DEBUG,"[%d] send  [%d] bytes",session->sid,
-                wbuf.end - wbuf.last);
+            rtmp_log(RTMP_LOG_DEBUG,"[%d]send  (%p,%d) bytes",session->sid,
+                session->out_last,wbuf.end - wbuf.last);
 
             rc = rtmp_send_buf(conn->fd,&wbuf,NULL);
 
             if (rc == SOCK_ERROR) {
-                rtmp_log(RTMP_LOG_ERR,"[%d] send error:%d",session->sid,rc);
+                rtmp_log(RTMP_LOG_ERR,"[%d] send error:%p,%d",session->sid,rc);
 
                 return;
             }
@@ -415,13 +415,13 @@ void rtmp_chain_send(rtmp_event_t *ev)
             }
         }
 
-        chain = session->out_message[out_rear];
+        chain = session->out_chain[out_rear];
         
         rtmp_log(RTMP_LOG_INFO,"[%d]send a message",session->sid);
 
         rtmp_core_free_chain(session,session->chunk_pool,chain);
 
-        session->out_message[out_rear] = NULL;
+        session->out_chain[out_rear] = NULL;
         session->out_last = NULL;
 
         session->out_rear = (out_rear + 1) % session->out_queue; 
@@ -467,7 +467,7 @@ int32_t rtmp_core_message_info(rtmp_session_t *session,
     }
 
     if (h->fmt != 0) {
-        last = session->streams[session->last_stream];
+        last = session->chunk_streams[session->last_stream];
     } else {
         last = 0;
     }
@@ -502,7 +502,7 @@ int32_t rtmp_core_update_chunk(rtmp_session_t *session,
 {
     rtmp_chunk_stream_t *st;
 
-    st = session->streams[h->csid];
+    st = session->chunk_streams[h->csid];
     
     /*ignore fragment*/
     if (st->recvlen == 0) {
@@ -578,8 +578,8 @@ void rtmp_core_lock_chain(mem_buf_chain_t *chain)
 void rtmp_core_free_chain(rtmp_session_t *session,
     mem_pool_t *pool,mem_buf_chain_t *chain)
 {
-    chain->chunk.last = chain->chunk.buf;
-    if (--chain->locked == 0) {
+    if (--chain->locked <= 0) {
+        chain->chunk.last = chain->chunk.buf;
         mem_free_chain_link(pool,chain);
         rtmp_log(RTMP_LOG_DEBUG,"[%d]free chain:%p",
             session->sid,chain);

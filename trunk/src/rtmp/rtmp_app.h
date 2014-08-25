@@ -19,18 +19,21 @@ typedef struct rtmp_live_link_s       rtmp_live_link_t;
 
 struct rtmp_live_link_s {
     rtmp_session_t         *session;
+    uint32_t                msgid;
     rtmp_live_stream_t     *lvst;
-    uint32_t                start:1;
-    uint32_t                lsid;
-
+    
     link_t                  link;
 };
 
 struct rtmp_live_stream_s {
     char                name[64];
     uint32_t            epoch;
+
+    uint32_t            timestamp;
+
     rtmp_live_link_t   *publisher;
-    list_t              players;
+    rtmp_live_link_t   *players;
+
     link_t              link;
 };
 

@@ -59,7 +59,6 @@ int32_t rtmp_handler_init(rtmp_cycle_t *cycle)
 {
     rtmp_msg_handler_t **handler;
     int32_t              i;
-    
 
     if (array_init(&cycle->msg_handler,cycle->pool,RTMP_MSG_MAX,
         sizeof(rtmp_msg_handler_t*)) != RTMP_OK) 
@@ -375,14 +374,7 @@ void rtmp_send_ping_response(rtmp_session_t *session,
     int32_t             rc;
     mem_buf_chain_t    *chain;
 
-    timestamp = 0;
-
-    timestamp += (uint32_t)buf->buf[2] << 24;
-    timestamp += (uint32_t)buf->buf[3] << 16;
-    timestamp += (uint32_t)buf->buf[4] << 8;
-    timestamp += (uint32_t)buf->buf[5];
-
-
+    timestamp = byte_make_ulong4(buf->buf+1);
     chain = rtmp_create_ping_response(session,timestamp);
 
     if (chain == NULL) {

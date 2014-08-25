@@ -138,7 +138,7 @@ int rtmp_log_init(int level,const char* logname)
     } while ( --level >= 0);
 
 #ifdef HAVE_DEBUG
-    rtmp_log(RTMP_LOG_INFO,"log file:[%d]%s",level,logname);
+    rtmp_log(RTMP_LOG_INFO,"log file:[%d]%s",log_file.level,logname);
 #endif
 
     return RTMP_OK;

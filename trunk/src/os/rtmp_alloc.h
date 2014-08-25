@@ -44,7 +44,7 @@ struct mem_buf_s {
 struct mem_buf_chain_s {
     mem_buf_t        chunk;
     uint32_t         chunk_size;
-    uint32_t         locked;
+    int32_t          locked;
     mem_buf_chain_t *next;
 };
 

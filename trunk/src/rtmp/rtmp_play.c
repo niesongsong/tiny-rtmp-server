@@ -89,7 +89,6 @@ int32_t rtmp_app_live_play(rtmp_session_t *session,rtmp_chunk_stream_t *st,
             session->sid,livestream);
         return RTMP_FAILED;
     }
-    lvid->start = 0;
 
     live = rtmp_app_live_get(app,livestream);
     if (live == NULL) {
@@ -102,11 +101,16 @@ int32_t rtmp_app_live_play(rtmp_session_t *session,rtmp_chunk_stream_t *st,
     if (rc == RTMP_OK) {
 
         session->lives[h->msgsid] = lvid;
-        lvid->lsid = h->msgsid;
+        lvid->msgid = h->msgsid;
         lvid->session = session;
         lvid->lvst = live;
 
-        list_insert_head(&live->players,&lvid->link); 
+        if (live->players == NULL) {
+            list_init(&lvid->link);
+            live->players = lvid;
+        } else {
+            list_insert_head(&live->players->link,&lvid->link); 
+        }
     }
 
     rtmp_log(RTMP_LOG_DEBUG,"[%d]play start[%d]",session->sid,rc);

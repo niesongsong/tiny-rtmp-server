@@ -230,8 +230,8 @@ void rtmp_handshake_send(rtmp_event_t *ev)
 
     rc = rtmp_send_buf(conn->fd, &hs->wbuf,NULL);
     if (rc == SOCK_EAGAIN) {    
-        rtmp_log(RTMP_LOG_DEBUG,"[%d] send error:%d",session->sid,rc);
-
+        rtmp_log(RTMP_LOG_DEBUG,"[%d] send error:%d",
+            session->sid,sock_errno);
         if (!ev->active) {
             rtmp_event_add(ev,EVENT_WRITE);
         }

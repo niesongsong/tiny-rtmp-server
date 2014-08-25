@@ -14,6 +14,7 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
     socklen_t            socklen;
     struct sockaddr_in  *addr_in;
     uint32_t             ssz,lsz,i;
+    mem_pool_t          *temp_pool;
 
     /*get local address*/
     socklen = sizeof(c->local_sockaddr);
@@ -41,23 +42,25 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
         }
     }
 
+    temp_pool = c->listening->cycle->temp_pool;
+
     rtmp_core_handshake_init();
 
     pool = c->pool;
     
     ssz = RTMP_DEFAULT_MAX_STREAMS * sizeof(rtmp_chunk_stream_t *);
-    lsz = RTMP_DEFAULT_MAX_LIVES * sizeof(rtmp_live_stream_t *);
+    lsz = (RTMP_DEFAULT_MAX_LIVES + 1) * sizeof(rtmp_live_stream_t *);
 
     session = mem_pcalloc(pool,sizeof(rtmp_session_t) + ssz + lsz);
     if (session == NULL) {
         return NULL;
     }
 
-    session->streams = (rtmp_chunk_stream_t **)((char *)session 
+    session->chunk_streams = (rtmp_chunk_stream_t **)((char *)session 
         + sizeof(rtmp_session_t));
     session->max_streams = RTMP_DEFAULT_MAX_STREAMS;
 
-    session->lives = (rtmp_live_link_t**)((char *)session->streams + ssz);
+    session->lives = (rtmp_live_link_t**)((char *)session->chunk_streams + ssz);
     session->max_lives = RTMP_DEFAULT_MAX_LIVES;
     for (i = 0;i < session->max_lives;i++) {
         session->lives[i] = RTMP_NULL;
@@ -76,16 +79,16 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
 
     session->out_chunk_size = RTMP_DEFAULT_OUT_CHUNKSIZE;
     session->out_queue = c->listening->cycle->out_queue;
-    session->out_message = mem_pcalloc(pool,session->out_queue*sizeof(void*));
-    if (session->out_message == NULL) {
+    session->out_chain = mem_pcalloc(pool,session->out_queue*sizeof(void*));
+    if (session->out_chain == NULL) {
         return NULL;
     }
 
     session->c = c;
-    session->pool = c->pool;
-    session->temp_pool = c->listening->cycle->temp_pool;
+    session->pool = c->pool; 
     session->sid = c->fd;
 
+    session->temp_pool = temp_pool;
     session->stream_time = -1;
     session->last_stream = -1;
 

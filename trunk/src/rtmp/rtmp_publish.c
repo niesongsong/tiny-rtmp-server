@@ -92,7 +92,7 @@ int32_t rtmp_app_live_publish(rtmp_session_t *session,
 
     lvid->session = session;
     lvid->lvst = live;
-    lvid->lsid = h->msgsid;
+    lvid->msgid = h->msgsid;
 
     session->lives[h->msgsid] = lvid;
     live->publisher = lvid;
