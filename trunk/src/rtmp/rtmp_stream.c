@@ -16,7 +16,7 @@ int32_t rtmp_amf_cmd_createstream(rtmp_session_t *session,
     uint32_t                lsid;
     
     if (num != 3) {
-        rtmp_log(RTMP_LOG_ERR,"amf number[%d] error!",num);
+        rtmp_log(RTMP_LOG_ERR,"[%d]amf number[%d] error!",session->sid,num);
         return RTMP_FAILED;
     }
 
@@ -55,12 +55,14 @@ int32_t rtmp_amf_cmd_createstream(rtmp_session_t *session,
 
     chain = rtmp_prepare_memssage_buf(session,&st->hdr,buf);
     if (chain == NULL) {
-        rtmp_log(RTMP_LOG_WARNING,"prepare connect app message failed!");
+        rtmp_log(RTMP_LOG_WARNING,"[%d]prepare connect app message failed!",
+            session->sid);
         return RTMP_FAILED;
     }
 
     if (rtmp_append_message_chain(session,chain) == -1) {
-        rtmp_log(RTMP_LOG_WARNING,"append connect app message failed!");
+        rtmp_log(RTMP_LOG_WARNING,"[%d]append connect app message failed!",
+            session->sid);
         return RTMP_FAILED;
     }
 

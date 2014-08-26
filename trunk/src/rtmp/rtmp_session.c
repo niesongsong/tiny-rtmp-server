@@ -72,7 +72,7 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
     }
 
     session->ack_window = RTMP_DEFAULT_ACK;
-    session->ping = RTMP_DEFAULT_PING;
+    session->ping_timeout = RTMP_DEFAULT_PING;
 
     session->in_chunk_size = RTMP_DEFAULT_IN_CHUNKSIZE;
     session->in_chain = NULL;
@@ -89,8 +89,8 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
     session->sid = c->fd;
 
     session->temp_pool = temp_pool;
-    session->stream_time = -1;
-    session->last_stream = -1;
+    session->chunk_time = -1;
+    session->last_chunk = -1;
 
     rtmp_log(RTMP_LOG_INFO,"[%d]create session",session->sid);
 
@@ -101,8 +101,8 @@ int32_t rtmp_session_destroy(rtmp_session_t * session)
 {
     uint32_t                i;
     rtmp_connection_t      *c;
-    rtmp_live_link_t     **lives;
-    
+    rtmp_live_link_t      **lives;
+
     if (session == NULL) {
         return RTMP_FAILED;
     }
@@ -110,10 +110,17 @@ int32_t rtmp_session_destroy(rtmp_session_t * session)
     rtmp_log(RTMP_LOG_INFO,"[%d]destroy session",session->sid);
     c = session->c;
 
+    /*free chains*/
+    for (i = 0;i < session->out_queue;i++) {
+        if (session->out_chain[i] != NULL) {
+            rtmp_core_free_chains(session,session->chunk_pool,
+                session->out_chain[i]);
+        }
+    }
+
     /*clear live streams*/
     lives = session->lives;
     for (i = 1;i < session->max_lives;i++) {
-
         if ((lives[i] != RTMP_NULL) && (lives[i] != RTMP_READY)) {
             rtmp_app_live_release(lives[i]);
         }

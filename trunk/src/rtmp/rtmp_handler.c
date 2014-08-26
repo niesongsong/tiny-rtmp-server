@@ -162,7 +162,7 @@ int32_t rtmp_handler_user(rtmp_session_t *session,rtmp_chunk_stream_t *st)
         break;
 
     case RTMP_USER_PING_RESPONSE:
-        session->send_ping = 0;
+        session->ping_sent = 0;
         break;
 
     default:

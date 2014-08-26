@@ -18,7 +18,7 @@ int32_t rtmp_core_update_inbytes(rtmp_session_t *session,
 int32_t rtmp_core_message_info(rtmp_session_t *session,
     rtmp_chunk_header_t *h);
 
-int32_t rtmp_core_update_chunk(rtmp_session_t *session,
+int32_t rtmp_core_update_chunk_time(rtmp_session_t *session,
     rtmp_chunk_header_t *h);
 
 void rtmp_core_chunk_recv(rtmp_event_t *ev);
@@ -141,16 +141,16 @@ void rtmp_core_chunk_recv(rtmp_event_t *ev)
 
     if (ev->timeout) {
 
-        if (session->send_ping == 1) {
+        if (session->ping_sent == 1) {
             rtmp_log(RTMP_LOG_INFO,"[%d]recv timeout!",session->sid);
             rtmp_session_destroy(session);
             return;
         }
 
-        session->send_ping = 1;
+        session->ping_sent = 1;
 
         rtmp_send_ping_request(session);
-        rtmp_event_add_timer(ev,session->ping);
+        rtmp_event_add_timer(ev,session->ping_timeout);
 
         return;
     }
@@ -164,7 +164,7 @@ void rtmp_core_chunk_recv(rtmp_event_t *ev)
             return ;
         }
 
-        session->send_ping = 0;
+        session->ping_sent = 0;
 
         hr = rtmp_core_update_inbytes(session,NULL,(uint32_t)n);
         if(hr != RTMP_OK) {
@@ -183,7 +183,7 @@ void rtmp_core_chunk_recv(rtmp_event_t *ev)
             if (!ev->active) {
                 rtmp_event_add(conn->read,EVENT_READ);
             }
-            rtmp_event_add_timer(ev,session->ping);
+            rtmp_event_add_timer(ev,session->ping_timeout);
             break;
         }
     }
@@ -261,8 +261,8 @@ int32_t rtmp_core_handle_recv(rtmp_session_t *session)
                 st->last = session->in_chain;
             }
 
-            rtmp_log(RTMP_LOG_DEBUG,"[%d]get a chunk ",session->sid);
-            rtmp_core_update_chunk(session,&hdr);
+            rtmp_log(RTMP_LOG_DEBUG,"[%d]get a chunk",session->sid);
+            rtmp_core_update_chunk_time(session,&hdr);
 
             session->in_chain = rtmp_core_alloc_chain(session,
                 session->c->pool,session->in_chunk_size);
@@ -290,10 +290,10 @@ int32_t rtmp_core_handle_recv(rtmp_session_t *session)
             /*an entire message ?*/
             if (st->recvlen == st->hdr.msglen) {
                 rtmp_log(RTMP_LOG_INFO,"[%d][%d]get a message:[%d]:[%d]:[%d]",
-                    session->sid,session->stream_time,st->hdr.msgsid,
+                    session->sid,session->chunk_time,st->hdr.msgsid,
                     st->hdr.msgtid,st->hdr.msglen);
 
-                st->timestamp = session->stream_time;
+                st->timestamp = session->chunk_time;
                 rc = rtmp_core_handle_message(session,st);
 
                 if (rc != RTMP_OK) {
@@ -331,7 +331,7 @@ void rtmp_chain_send(rtmp_event_t *ev)
     session = conn->data;
 
     if (ev->timeout) {
-        rtmp_log(RTMP_LOG_WARNING,"send [%d] buf timeout!",conn->fd);
+        rtmp_log(RTMP_LOG_WARNING,"[%d]send timeout!",conn->fd);
         rtmp_session_destroy(session);
         return;
     }
@@ -356,7 +356,7 @@ void rtmp_chain_send(rtmp_event_t *ev)
             session->out_chunk = session->out_chain[out_rear];
             if (session->out_chunk == NULL) {
 
-                rtmp_log(RTMP_LOG_WARNING,"[%d] pick null message",
+                rtmp_log(RTMP_LOG_WARNING,"[%d]pick null message",
                     session->sid);
 
                 session->out_rear = (out_rear + 1) % session->out_queue;
@@ -381,19 +381,19 @@ void rtmp_chain_send(rtmp_event_t *ev)
             wbuf.last = session->out_last;
             wbuf.end = sbuf->end;
 
-            rtmp_log(RTMP_LOG_DEBUG,"[%d]send  (%p,%d) bytes",session->sid,
+            rtmp_log(RTMP_LOG_DEBUG,"[%d]send (%p,%d) bytes",session->sid,
                 session->out_last,wbuf.end - wbuf.last);
 
             rc = rtmp_send_buf(conn->fd,&wbuf,NULL);
 
             if (rc == SOCK_ERROR) {
-                rtmp_log(RTMP_LOG_ERR,"[%d] send error:%p,%d",session->sid,rc);
+                rtmp_log(RTMP_LOG_ERR,"[%d]send error:%p,%d",session->sid,rc);
 
                 return;
             }
 
             if (rc == SOCK_EAGAIN) {
-                rtmp_log(RTMP_LOG_DEBUG,"[%d] send again:%d",session->sid,rc);
+                rtmp_log(RTMP_LOG_DEBUG,"[%d]send again:%d",session->sid,rc);
 
                 session->out_last = wbuf.last;
 
@@ -405,7 +405,7 @@ void rtmp_chain_send(rtmp_event_t *ev)
                 return ;
             }
 
-            session->send_ping = 0;
+            session->ping_sent = 0;
 
             chain = session->out_chunk->next;
             session->out_chunk = chain;
@@ -456,18 +456,18 @@ int32_t rtmp_core_message_info(rtmp_session_t *session,
 {
     rtmp_chunk_stream_t *last;
 
-    if (((session->last_stream == (uint32_t)-1) && (h->fmt > 0))
+    if (((session->last_chunk == (uint32_t)-1) && (h->fmt > 0))
       || (h->csid < 2)) 
     {
         return RTMP_FAILED;
     }
 
-    if ((session->stream_time == (uint32_t)-1) && h->fmt > 0) {
+    if ((session->chunk_time == (uint32_t)-1) && h->fmt > 0) {
         return RTMP_FAILED;
     }
 
     if (h->fmt != 0) {
-        last = session->chunk_streams[session->last_stream];
+        last = session->chunk_streams[session->last_chunk];
     } else {
         last = 0;
     }
@@ -488,7 +488,7 @@ int32_t rtmp_core_message_info(rtmp_session_t *session,
         break;
 
     default:
-        rtmp_log(RTMP_LOG_DEBUG,"[%d] never reach here, csid:[%d]",
+        rtmp_log(RTMP_LOG_DEBUG,"[%d]never reach here, csid:[%d]",
             session->sid,h->csid);
 
         break;
@@ -497,7 +497,7 @@ int32_t rtmp_core_message_info(rtmp_session_t *session,
     return RTMP_OK;
 }
 
-int32_t rtmp_core_update_chunk(rtmp_session_t *session,
+int32_t rtmp_core_update_chunk_time(rtmp_session_t *session,
     rtmp_chunk_header_t *h)
 {
     rtmp_chunk_stream_t *st;
@@ -510,9 +510,9 @@ int32_t rtmp_core_update_chunk(rtmp_session_t *session,
 
         case 0:
             if (st->hdr.dtime == 0xffffff) {
-                session->stream_time = st->hdr.extend;
+                session->chunk_time = st->hdr.extend;
             } else {
-                session->stream_time = st->hdr.dtime;
+                session->chunk_time = st->hdr.dtime;
             }
             break;
 
@@ -521,15 +521,15 @@ int32_t rtmp_core_update_chunk(rtmp_session_t *session,
         case 3:
 
             if (st->hdr.dtime == 0xffffff) {
-                session->stream_time += st->hdr.extend;
+                session->chunk_time += st->hdr.extend;
             } else {
-                session->stream_time += st->hdr.dtime;
+                session->chunk_time += st->hdr.dtime;
             }
             break;
         }
     }
 
-    session->last_stream = h->csid;
+    session->last_chunk = h->csid;
     return RTMP_OK;
 }
 
