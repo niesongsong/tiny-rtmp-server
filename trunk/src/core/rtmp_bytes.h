@@ -114,6 +114,17 @@
     ((uint8_t*)(b))[1] = (uint8_t)(((uint64_t)(u) >>  8));  \
     ((uint8_t*)(b))[0] = (uint8_t)(((uint64_t)(u)      ))
 
+
+typedef struct mem_bits_s mem_bits_t;
+struct mem_bits_s {
+    uint32_t    offset;
+    mem_buf_t   buf;
+};
+
 void byte_fill_random(char *buf,int size);
+
+uint32_t mem_bits_init(mem_bits_t *b,mem_buf_t *buf);
+uint32_t mem_bits_read(mem_bits_t *b,uint16_t l);
+uint32_t mem_bits_read_golomb(mem_bits_t *b);
 
 #endif

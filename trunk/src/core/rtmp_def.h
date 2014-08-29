@@ -23,4 +23,8 @@ typedef struct rtmp_session_s       rtmp_session_t;
 typedef struct rtmp_addr_port_s     rtmp_addr_port_t;
 typedef struct rtmp_addr_inet_s     rtmp_addr_inet_t;
 
+#define RTMP_VIDEO_KEY_FRAME            1
+#define RTMP_VIDEO_INTER_FRAME          2
+#define RTMP_VIDEO_DISPOSABLE_FRAME     3
+
 #endif

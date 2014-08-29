@@ -42,9 +42,12 @@ struct mem_buf_s {
 };
 
 struct mem_buf_chain_s {
-    mem_buf_t        chunk;
+    uint8_t         *chunk_body;
     uint32_t         chunk_size;
+
+    mem_buf_t        chunk;
     int32_t          locked;
+
     mem_buf_chain_t *next;
 };
 

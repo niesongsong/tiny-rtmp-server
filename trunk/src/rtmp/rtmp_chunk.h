@@ -12,7 +12,7 @@
 
 #define RTMP_DEFAULT_IN_CHUNKSIZE   128
 #define RTMP_DEFAULT_OUT_CHUNKSIZE  4096
-#define RTMP_MAX_BASICHEADER        18
+#define RTMP_MAX_CHUNK_HEADER       18
 
 /*
     +--------------+----------------+--------------------+--------------+

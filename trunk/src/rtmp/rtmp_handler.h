@@ -40,76 +40,112 @@
 /*
     msg handler
  */
+
 typedef int32_t (*rtmp_msg_handler_pt)(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st);
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
 
 typedef struct rtmp_msg_handler_s {
     uint32_t            msg_id;
     rtmp_msg_handler_pt pt;
 }rtmp_msg_handler_t;
 
-int32_t rtmp_handler_null(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_chunksize(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_abort(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_ack(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_user(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_acksize(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_bandwidth(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_edge(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_avdata(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_avdata(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_amf3meta(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_amf3shared(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_amf3cmd(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_amfmeta(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_amfshared(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_amfcmd(rtmp_session_t *s,rtmp_chunk_stream_t *st);
-int32_t rtmp_handler_aggregate(rtmp_session_t *s,rtmp_chunk_stream_t *st);
+int32_t rtmp_handler_null(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_chunksize(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_abort(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_ack(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_user(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_acksize(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_bandwidth(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_edge(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_audio(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_video(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_avdata(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_amf3meta(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_amf3shared(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_amf3cmd(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_amfmeta(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_amfshared(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_amfcmd(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
+
+int32_t rtmp_handler_aggregate(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg);
 
 /*
     amf handler
 */
 typedef int32_t (*rtmp_msg_amf_handler_pt)(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+    rtmp_chunk_header_t *,amf_data_t *amf[],uint32_t num);
 
 typedef struct rtmp_msg_amf_handler_s {
     char                    *command;
     rtmp_msg_amf_handler_pt  pt;
 }rtmp_msg_amf_handler_t;
 
-int32_t rtmp_amf_cmd_connect(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_createstream(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_createstream(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_closestream(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_closestream(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_deletestream(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_deletestream(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_releasestream(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_releasestream(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_publish(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_publish(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_play(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_play(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_play2(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_play2(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_seek(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
+int32_t rtmp_amf_cmd_seek(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
-int32_t rtmp_amf_cmd_pause(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num);
-
+int32_t rtmp_amf_cmd_pause(rtmp_session_t *session,
+    rtmp_chunk_header_t *head,amf_data_t *amf[],uint32_t num);
 
 void rtmp_send_ping_response(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st,mem_buf_t *buf);
+    rtmp_chunk_header_t *chunk,mem_buf_t *buf);
 
 void rtmp_send_ping_request(rtmp_session_t *session);
 

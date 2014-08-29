@@ -54,7 +54,7 @@ rtmp_create_proctol_message(rtmp_session_t *session,uint8_t type,uint8_t len)
         return NULL;
     }
 
-    head = chain->chunk.buf + RTMP_MAX_BASICHEADER - RTMP_PROTO_HEAD_LEN;
+    head = chain->chunk.buf + RTMP_MAX_CHUNK_HEADER - RTMP_PROTO_HEAD_LEN;
 
     chain->chunk.last = head + RTMP_PROTO_HEAD_LEN;
     chain->chunk.end = chain->chunk.last + len;
@@ -156,7 +156,7 @@ mem_buf_chain_t* rtmp_prepare_memssage_chain(rtmp_session_t *session,
     mem_buf_t            src,*dest,buf;
     uint32_t             n;
     rtmp_chunk_header_t  hdr;
-    uint8_t              headbuf[RTMP_MAX_BASICHEADER],*body,*end;
+    uint8_t              headbuf[RTMP_MAX_CHUNK_HEADER],*body,*end;
 
     hdr = *sthead;
 
@@ -168,9 +168,7 @@ mem_buf_chain_t* rtmp_prepare_memssage_chain(rtmp_session_t *session,
     end = NULL;
 
     for (chain = in_chain;chain; chain= chain->next) {
-
         src = chain->chunk;
-        src.buf = rtmp_chunk_read(&src,&hdr);
 
         if (src.buf == NULL) {
             rtmp_core_free_chains(session,session->chunk_pool,head);
@@ -210,7 +208,7 @@ mem_buf_chain_t* rtmp_prepare_memssage_chain(rtmp_session_t *session,
                 buf.last = headbuf;
                 rtmp_chunk_write(&buf,&hdr);
 
-                body = dest->buf + RTMP_MAX_BASICHEADER;
+                body = dest->buf + RTMP_MAX_CHUNK_HEADER;
                 dest->last = body - (buf.last - buf.buf);
 
                 memcpy(dest->last,buf.buf,buf.last - buf.buf);
@@ -244,7 +242,7 @@ mem_buf_chain_t* rtmp_prepare_memssage_buf(rtmp_session_t *session,
     mem_buf_chain_t     *chain,*next;
     rtmp_chunk_header_t  hdr;
     mem_buf_t            buf;
-    uint8_t              headbuf[RTMP_MAX_BASICHEADER],*body;
+    uint8_t              headbuf[RTMP_MAX_CHUNK_HEADER],*body;
     mem_pool_t          *chunk_pool;
 
 
@@ -281,7 +279,7 @@ mem_buf_chain_t* rtmp_prepare_memssage_buf(rtmp_session_t *session,
             break;
         }
 
-        body = chain->chunk.buf + RTMP_MAX_BASICHEADER;
+        body = chain->chunk.buf + RTMP_MAX_CHUNK_HEADER;
 
         /*copy head*/
         chain->chunk.last = body - (buf.last - buf.buf);
@@ -472,7 +470,7 @@ rtmp_create_ping_request(rtmp_session_t *session,uint32_t timestamp)
 
         last = chain->chunk.last;
 
-        ulong_make_byte4(last,RTMP_USER_PING_REQUEST);
+        ulong_make_byte2(last,RTMP_USER_PING_REQUEST);
         ulong_make_byte4(last+2,timestamp);
 
         chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
@@ -491,7 +489,7 @@ rtmp_create_ping_response(rtmp_session_t *session,uint32_t timestamp)
     if (chain) {
         last = chain->chunk.last;
 
-        ulong_make_byte4(last,RTMP_USER_PING_RESPONSE);
+        ulong_make_byte2(last,RTMP_USER_PING_RESPONSE);
         ulong_make_byte4(last+2,timestamp);
   
         chain->chunk.last -= RTMP_PROTO_HEAD_LEN;

@@ -8,10 +8,15 @@
 
 
 static int32_t rtmp_live_send_avdata(rtmp_live_link_t *client,
-rtmp_chunk_stream_t *st,mem_buf_chain_t *chain);
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain);
+
+static uint8_t rtmp_get_video_frame_type(mem_buf_chain_t *chain)
+{
+    return (chain->chunk.buf[0] & 0xf0) >> 4;
+}
 
 static int32_t rtmp_live_send_avdata(rtmp_live_link_t *client,
-    rtmp_chunk_stream_t *st,mem_buf_chain_t *chain)
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     rtmp_session_t     *session;
 
@@ -21,27 +26,45 @@ static int32_t rtmp_live_send_avdata(rtmp_live_link_t *client,
         rtmp_log(RTMP_LOG_DEBUG,"[%d] drop message",session->sid);
     }
     
-    rtmp_core_lock_chain(chain);
+    rtmp_core_lock_chains(chain);
 
     rtmp_chain_send(client->session->c->write);
     return RTMP_OK;
 }
 
-int32_t rtmp_handler_avdata(rtmp_session_t *session,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_audio(rtmp_session_t *s,rtmp_chunk_header_t *chunk,
+    mem_buf_chain_t *msg)
+{
+    return rtmp_handler_avdata(s,chunk,msg);
+}
+
+int32_t rtmp_handler_video(rtmp_session_t *s,rtmp_chunk_header_t *chunk,
+    mem_buf_chain_t *msg)
+{
+    return rtmp_handler_avdata(s,chunk,msg);
+}
+
+int32_t rtmp_handler_avdata(rtmp_session_t *session,rtmp_chunk_header_t *chunk,
+    mem_buf_chain_t *in_chain)
 {
     rtmp_live_stream_t     *live;
     rtmp_live_link_t       *link,*client;
     link_t                 *next;
     int32_t                 rc;
     mem_buf_chain_t        *chain;
+    uint8_t                 keyframe;
 
-    if ((st->hdr.msgsid == 0) || (st->hdr.msgsid >= session->max_lives)) {
+    if (chunk->msgtid == RTMP_MSG_VIDEO) {
+        keyframe = rtmp_get_video_frame_type(in_chain);
+    }
+
+    if ((chunk->msgsid == 0) || (chunk->msgsid >= session->max_lives)) {
         rtmp_log(RTMP_LOG_ERR,"[%d]invalid message stream id[%d]!",
-            session->sid,st->hdr.msgsid);
+            session->sid,chunk->msgsid);
         return RTMP_FAILED;
     }
 
-    link = session->lives[st->hdr.msgsid];
+    link = session->lives[chunk->msgsid];
     if (link == RTMP_NULL || link == RTMP_READY) {
         rtmp_log(RTMP_LOG_ERR,"[%d]invalid message stream status[%p]!",
             session->sid,link);
@@ -58,7 +81,7 @@ int32_t rtmp_handler_avdata(rtmp_session_t *session,rtmp_chunk_stream_t *st)
         return RTMP_OK;
     }
 
-    chain = rtmp_prepare_memssage_chain(session,&st->hdr,st->chain);
+    chain = rtmp_prepare_memssage_chain(session,chunk,in_chain);
     if (chain == NULL) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]crtmp_message_copy_to_chain() failed!",
             session->sid);
@@ -90,7 +113,7 @@ int32_t rtmp_handler_avdata(rtmp_session_t *session,rtmp_chunk_stream_t *st)
                 continue;
             }
 
-            rc = rtmp_live_send_avdata(client,st,chain);
+            rc = rtmp_live_send_avdata(client,chunk,chain);
 
             if (rc != RTMP_OK) {
                 rtmp_log(RTMP_LOG_WARNING,"[%d]send avdata[%d]",

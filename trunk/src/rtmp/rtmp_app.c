@@ -91,7 +91,6 @@ rtmp_live_stream_t* rtmp_app_live_find(rtmp_app_t *app,
 rtmp_live_stream_t* rtmp_app_live_alloc(rtmp_app_t *app,
     const char *livestream)
 {
-
     mem_pool_t              *pool;
     rtmp_live_stream_t      *live;
     uint32_t                 k;

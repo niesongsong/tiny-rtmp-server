@@ -105,3 +105,46 @@ void byte_fill_random(char *buf,int size)
         buf[size] = (unsigned char)rand();
     }
 }
+
+uint32_t mem_bits_init(mem_bits_t *b,mem_buf_t *buf)
+{
+    b->buf = *buf;
+    b->offset = 0;
+
+    return RTMP_OK;
+}
+
+uint32_t mem_bits_read(mem_bits_t *b,uint16_t l)
+{
+    uint32_t    n,c,i,j;
+    uint8_t     buf[8];
+
+    c = (uint32_t)(b->buf.last - b->buf.buf);
+    if ((b->offset + l > c * 8) || (l > 32)) {
+        return (uint32_t)-1;
+    }
+
+    memcpy(buf,& b->buf.buf[b->offset/8],(l+7)/8);
+    j = b->offset % 8;
+
+    n = 0;
+    for (i = j;i < j + l;i++) {
+        n = (uint32_t)((buf[i/8] >> (7-i%8)) & 1) | (n << 1);
+    }
+    b->offset += l;
+
+    return n;
+}
+
+uint32_t mem_bits_read_golomb(mem_bits_t *b)
+{
+    uint32_t n;
+
+    for (n = 0;mem_bits_read(b,1) == 0;n++) {
+        if (b->offset >= (uint32_t)(b->buf.last - b->buf.buf) * 8) {
+            break;
+        }
+    }
+
+    return (1 << n) + mem_bits_read(b,n) - 1;
+}

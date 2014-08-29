@@ -8,7 +8,7 @@
 #include "rtmp_core.h"
 
 int32_t rtmp_app_live_publish(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st,char *livestream)
+    rtmp_chunk_header_t *chunk,char *livestream)
 {
     rtmp_app_t              *app;
     rtmp_live_stream_t      *live;
@@ -16,7 +16,7 @@ int32_t rtmp_app_live_publish(rtmp_session_t *session,
     int32_t                  rc;
     rtmp_chunk_header_t     *h;
 
-    h = & st->hdr;
+    h = chunk;
     app = session->app_ctx;
 
     if ((h->msgsid == 0) || (h->msgsid >= session->max_lives) 
@@ -113,7 +113,7 @@ int32_t rtmp_app_live_publish(rtmp_session_t *session,
     string "live"
 */
 int32_t rtmp_amf_cmd_publish(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num)
+    rtmp_chunk_header_t *chunk,amf_data_t *amf[],uint32_t num)
 {
     char  *livestream,*streamtype,*arg;
 
@@ -143,5 +143,5 @@ int32_t rtmp_amf_cmd_publish(rtmp_session_t *s,
             arg,(*arg ? arg:"null"));
     }
 
-    return rtmp_app_live_publish(s,st,livestream);
+    return rtmp_app_live_publish(s,chunk,livestream);
 }

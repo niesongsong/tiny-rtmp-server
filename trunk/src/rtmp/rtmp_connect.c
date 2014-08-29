@@ -34,16 +34,16 @@
 static int32_t rtmp_amf_parse_connect(rtmp_session_t *session,amf_data_t *amf);
 
 static int32_t rtmp_connect_success_send(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st);
+    rtmp_chunk_header_t *head);
 
 static uint32_t rtmp_connect_amf_result(rtmp_session_t *sesssion,
-    rtmp_chunk_stream_t *st);
+    rtmp_chunk_header_t *head);
 
 static int32_t rtmp_connect_failed_send(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st);
+    rtmp_chunk_header_t *head);
 
-int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num)
+int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,rtmp_chunk_header_t *chunk,
+    amf_data_t *amf[],uint32_t num)
 {
     int32_t             rc,i,h;
     double              transmitid;
@@ -119,7 +119,7 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
             session->sid,conn->app);
 
         /*send connect result*/
-        (void)rtmp_connect_failed_send(session,st);
+        (void)rtmp_connect_failed_send(session,chunk);
         return RTMP_FAILED;
     }
     app = session->app_ctx;
@@ -132,7 +132,7 @@ int32_t rtmp_amf_cmd_connect(rtmp_session_t *session,
         session->out_chunk_size = app->conf->chunk_size;
     }
 
-    return rtmp_connect_success_send(session,st);
+    return rtmp_connect_success_send(session,chunk);
 }
 
 int32_t rtmp_amf_parse_connect(rtmp_session_t *session,amf_data_t *amf)
@@ -199,35 +199,32 @@ int32_t rtmp_amf_parse_connect(rtmp_session_t *session,amf_data_t *amf)
 }
 
 static int32_t rtmp_connect_success_send(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st)
+    rtmp_chunk_header_t *head)
 {
-    int32_t                 rc;
-    rtmp_chunk_header_t    *h;
+    int32_t  rc;
 
-    h = &st->hdr;
-
-    rc = rtmp_create_append_chain(session,rtmp_create_ack_size,h);
+    rc = rtmp_create_append_chain(session,rtmp_create_ack_size,head);
     if (rc != RTMP_OK) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]append ack windows "
             "message failed!",session->sid);
         return RTMP_FAILED;
     }
 
-    rc = rtmp_create_append_chain(session,rtmp_create_peer_bandwidth_size,h);
+    rc = rtmp_create_append_chain(session,rtmp_create_peer_bandwidth_size,head);
     if (rc != RTMP_OK) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]append bandwidth "
             "message failed!",session->sid);
         return RTMP_FAILED;
     }
 
-    rc = rtmp_create_append_chain(session,rtmp_create_set_chunk_size,h);
+    rc = rtmp_create_append_chain(session,rtmp_create_set_chunk_size,head);
     if (rc != RTMP_OK) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]append set chunk size "
             "message failed!",session->sid);
         return RTMP_FAILED;
     }
 
-    if (rtmp_connect_amf_result(session,st) != RTMP_OK) {
+    if (rtmp_connect_amf_result(session,head) != RTMP_OK) {
         return RTMP_FAILED;
     }
 
@@ -241,7 +238,7 @@ static int32_t rtmp_connect_success_send(rtmp_session_t *session,
 }
 
 static uint32_t rtmp_connect_amf_result(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st)
+    rtmp_chunk_header_t *head)
 {
     amf_data_t      *amf[4],*ecma;
     mem_buf_t       *buf; 
@@ -287,7 +284,7 @@ static uint32_t rtmp_connect_amf_result(rtmp_session_t *session,
         return RTMP_FAILED;
     }
 
-    chain = rtmp_prepare_memssage_buf(session,&st->hdr,buf);
+    chain = rtmp_prepare_memssage_buf(session,head,buf);
     if (chain == NULL) {
         rtmp_log(RTMP_LOG_WARNING,"prepare connect app message failed!");
         return RTMP_FAILED;
@@ -302,7 +299,7 @@ static uint32_t rtmp_connect_amf_result(rtmp_session_t *session,
 }
 
 static int32_t rtmp_connect_failed_send(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st)
+    rtmp_chunk_header_t *head)
 {
     return RTMP_OK;
 }

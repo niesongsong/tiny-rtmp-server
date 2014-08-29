@@ -51,7 +51,7 @@
 uint8_t* rtmp_chunk_read(mem_buf_t *buf,rtmp_chunk_header_t *h)
 {
     uint32_t                csid;
-    uint8_t                *p,*last;
+    uint8_t                 *p,*last;
 
     memset(h,0,sizeof(rtmp_chunk_header_t));
 

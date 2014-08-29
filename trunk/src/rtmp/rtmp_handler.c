@@ -16,8 +16,8 @@ static rtmp_msg_handler_t rtmp_msg_handler[RTMP_MSG_MAX] = {
     {RTMP_MSG_ACK_SIZE,     rtmp_handler_acksize},      /*5*/
     {RTMP_MSG_BANDWIDTH,    rtmp_handler_bandwidth},    /*6*/
     {RTMP_MSG_EDGE,         rtmp_handler_edge},         /*7*/
-    {RTMP_MSG_AUDIO,        rtmp_handler_avdata},         /*8*/
-    {RTMP_MSG_VIDEO,        rtmp_handler_avdata},         /*9*/
+    {RTMP_MSG_AUDIO,        rtmp_handler_audio},        /*8*/
+    {RTMP_MSG_VIDEO,        rtmp_handler_video},        /*9*/
     {10,                    rtmp_handler_null},         /*10*/
     {11,                    rtmp_handler_null},         /*11*/
     {12,                    rtmp_handler_null},         /*12*/
@@ -52,8 +52,6 @@ static rtmp_msg_amf_handler_t rtmp_msg_cmd_handler[] = {
 
 static void* rtmp_amf_pmalloc(size_t size,void *u);
 static void  rtmp_amf_pfree(void *p,void *u);
-static mem_buf_t* rtmp_copy_chains_to_temp_buf(rtmp_chunk_stream_t *st,
-    mem_pool_t *temp_pool);
 
 int32_t rtmp_handler_init(rtmp_cycle_t *cycle)
 {
@@ -78,19 +76,20 @@ int32_t rtmp_handler_init(rtmp_cycle_t *cycle)
     return RTMP_OK;
 }
 
-int32_t rtmp_handler_null(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_null(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     return RTMP_OK;
 }
 
 int32_t rtmp_handler_chunksize(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st)
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     mem_buf_t           *buf;
     uint32_t             chunksize;
 
     mem_reset_pool(session->temp_pool);
-    buf = rtmp_copy_chains_to_temp_buf(st,session->temp_pool);
+    buf = rtmp_copy_chains_to_temp_buf(chain,session->temp_pool);
     if (buf == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]copy chain failed!",session->sid);
         return RTMP_FAILED;
@@ -112,22 +111,25 @@ int32_t rtmp_handler_chunksize(rtmp_session_t *session,
     return RTMP_OK;
 }
 
-int32_t rtmp_handler_abort(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_abort(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     return RTMP_OK;
 }
-int32_t rtmp_handler_ack(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_ack(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     return RTMP_OK;
 }
 
-int32_t rtmp_handler_user(rtmp_session_t *session,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_user(rtmp_session_t *session,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     mem_buf_t           *buf;
     uint16_t             evt;
 
     mem_reset_pool(session->temp_pool);
-    buf = rtmp_copy_chains_to_temp_buf(st,session->temp_pool);
+    buf = rtmp_copy_chains_to_temp_buf(chain,session->temp_pool);
     if (buf == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]copy chain failed!",session->sid);
         return RTMP_FAILED;
@@ -157,7 +159,7 @@ int32_t rtmp_handler_user(rtmp_session_t *session,rtmp_chunk_stream_t *st)
 
         break;
     case RTMP_USER_PING_REQUEST:
-        rtmp_send_ping_response(session,st,buf);
+        rtmp_send_ping_response(session,chunk,buf);
 
         break;
 
@@ -172,13 +174,11 @@ int32_t rtmp_handler_user(rtmp_session_t *session,rtmp_chunk_stream_t *st)
     return RTMP_OK;
 }
 
-static mem_buf_t* rtmp_copy_chains_to_temp_buf(rtmp_chunk_stream_t *st,
+mem_buf_t* rtmp_copy_chains_to_temp_buf(mem_buf_chain_t *chain_in,
     mem_pool_t *temp_pool)
 {
     mem_buf_t           *buf;
     mem_buf_chain_t     *chain;
-    uint8_t             *body;
-    rtmp_chunk_header_t  hdr;
     int32_t              ncopy;
 
     buf = mem_palloc(temp_pool,sizeof(mem_buf_t));
@@ -186,35 +186,32 @@ static mem_buf_t* rtmp_copy_chains_to_temp_buf(rtmp_chunk_stream_t *st,
         return NULL;
     }
 
-    if (st->chain == st->chain->next) {
-        body = rtmp_chunk_read(&st->chain->chunk,&hdr);
-        if (body == NULL) {
-            return NULL;
-        }
+    if (chain_in->next == NULL) {
 
-        *buf = st->chain->chunk;
-        buf->last = body;
+        *buf = chain_in->chunk;
 
     } else {
+        ncopy = 0;
+        chain = chain_in;
+        while (chain) {
+            ncopy += chain->chunk.last - chain->chunk.buf;
+            chain = chain->next;
+        }
 
-        buf->buf = mem_palloc(temp_pool,st->recvlen);
+        buf->buf = mem_palloc(temp_pool,ncopy);
         if (buf->buf == NULL) {
             return NULL;
         }
 
         buf->last = buf->buf;
-        buf->end = buf->buf + st->recvlen;
+        buf->end = buf->buf + ncopy;
         ncopy = 0;
 
-        chain = st->chain;
+        chain = chain_in;
         while (chain) {
-            body = rtmp_chunk_read(&chain->chunk,&hdr);
-            if (body == NULL) {
-                return NULL;
-            }
-            ncopy = chain->chunk.last - body;
+            ncopy = chain->chunk.last - chain->chunk.buf;
             if (ncopy > 0) {
-                memcpy(buf->last,body,ncopy);
+                memcpy(buf->last,chain->chunk.buf,ncopy);
                 buf->last += ncopy;
             }
             chain = chain->next;
@@ -224,30 +221,35 @@ static mem_buf_t* rtmp_copy_chains_to_temp_buf(rtmp_chunk_stream_t *st,
     return buf;
 }
 
-int32_t rtmp_handler_acksize(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_acksize(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg)
 {
     return RTMP_OK;
 }
-int32_t rtmp_handler_bandwidth(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_bandwidth(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg)
 {
     return RTMP_OK;
 }
-int32_t rtmp_handler_edge(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_edge(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg)
 {
     return RTMP_OK;
 }
 
-int32_t rtmp_handler_amf3meta(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_amf3meta(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg)
 {
     return RTMP_OK;
 }
-int32_t rtmp_handler_amf3shared(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_amf3shared(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg)
 {
     return RTMP_OK;
 }
 
 int32_t rtmp_handler_amf0_amf3cmd(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st,int type)
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain,int type)
 {
     mem_buf_t           *buf;
     int32_t              buflen,i,n;
@@ -257,7 +259,7 @@ int32_t rtmp_handler_amf0_amf3cmd(rtmp_session_t *session,
     amf_init(rtmp_amf_pmalloc,rtmp_amf_pfree,session->temp_pool);
 
     mem_reset_pool(session->temp_pool);
-    buf = rtmp_copy_chains_to_temp_buf(st,session->temp_pool);
+    buf = rtmp_copy_chains_to_temp_buf(chain,session->temp_pool);
     if (buf == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]copy chain failed!",session->sid);
         return RTMP_FAILED;
@@ -293,7 +295,7 @@ int32_t rtmp_handler_amf0_amf3cmd(rtmp_session_t *session,
         for (i = 0;i < (int32_t)rtmp_array_size(rtmp_msg_cmd_handler);i++) {
             if (strcmp(cmd,rtmp_msg_cmd_handler[i].command) == 0) {
                 if (rtmp_msg_cmd_handler[i].pt) {
-                    return rtmp_msg_cmd_handler[i].pt(session,st,amfcmd,n);
+                    return rtmp_msg_cmd_handler[i].pt(session,chunk,amfcmd,n);
                 }
             }
         }
@@ -303,26 +305,29 @@ int32_t rtmp_handler_amf0_amf3cmd(rtmp_session_t *session,
 }
 
 int32_t rtmp_handler_amf3cmd(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st)
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
-    return rtmp_handler_amf0_amf3cmd(session,st,3);
+    return rtmp_handler_amf0_amf3cmd(session,chunk,chain,3);
 }
-int32_t rtmp_handler_amfmeta(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_amfmeta(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     return RTMP_OK;
 }
-int32_t rtmp_handler_amfshared(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_amfshared(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     return RTMP_OK;
 }
 
 int32_t rtmp_handler_amfcmd(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st)
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
-    return rtmp_handler_amf0_amf3cmd(session,st,0);
+    return rtmp_handler_amf0_amf3cmd(session,chunk,chain,0);
 }
 
-int32_t rtmp_handler_aggregate(rtmp_session_t *s,rtmp_chunk_stream_t *st)
+int32_t rtmp_handler_aggregate(rtmp_session_t *s,
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     return RTMP_OK;
 }
@@ -338,37 +343,37 @@ static void rtmp_amf_pfree(void *p,void *u)
 }
 
 int32_t rtmp_amf_cmd_closestream(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num)
+    rtmp_chunk_header_t *chunk,amf_data_t *amf[],uint32_t num)
 {
     return RTMP_OK;
 }
 
 int32_t rtmp_amf_cmd_deletestream(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num)
+    rtmp_chunk_header_t *chunk,amf_data_t *amf[],uint32_t num)
 {
     return RTMP_OK;
 }
 
 int32_t rtmp_amf_cmd_play2(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num)
+    rtmp_chunk_header_t *chunk,amf_data_t *amf[],uint32_t num)
 {
     return RTMP_FAILED;
 }
 
 int32_t rtmp_amf_cmd_seek(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num)
+    rtmp_chunk_header_t *chunk,amf_data_t *amf[],uint32_t num)
 {
     return RTMP_FAILED;
 }
 
 int32_t rtmp_amf_cmd_pause(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num)
+    rtmp_chunk_header_t *chunk,amf_data_t *amf[],uint32_t num)
 {
     return RTMP_FAILED;
 }
 
 void rtmp_send_ping_response(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st,mem_buf_t *buf)
+    rtmp_chunk_header_t *chunk,mem_buf_t *buf)
 {
     uint32_t            timestamp;
     int32_t             rc;

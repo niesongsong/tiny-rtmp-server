@@ -52,7 +52,7 @@ static int32_t rtmp_app_live_play_send(rtmp_session_t *session,
     return RTMP_OK;
 }
 
-int32_t rtmp_app_live_play(rtmp_session_t *session,rtmp_chunk_stream_t *st,
+int32_t rtmp_app_live_play(rtmp_session_t *session,rtmp_chunk_header_t *chunk,
     const char *livestream)
 {
     rtmp_app_t              *app;
@@ -61,7 +61,7 @@ int32_t rtmp_app_live_play(rtmp_session_t *session,rtmp_chunk_stream_t *st,
     int32_t                  rc;
     rtmp_chunk_header_t     *h;
 
-    h = & st->hdr;
+    h = chunk;
     app = session->app_ctx;
 
     if ((h->msgsid == 0) || (h->msgsid >= session->max_lives) 
@@ -125,7 +125,7 @@ int32_t rtmp_app_live_play(rtmp_session_t *session,rtmp_chunk_stream_t *st,
     string "cameraFeed"
 */
 int32_t rtmp_amf_cmd_play(rtmp_session_t *s,
-    rtmp_chunk_stream_t *st,amf_data_t *amf[],uint32_t num)
+    rtmp_chunk_header_t *chunk,amf_data_t *amf[],uint32_t num)
 {
     char  *livestream,*arg;
 
@@ -142,5 +142,5 @@ int32_t rtmp_amf_cmd_play(rtmp_session_t *s,
             arg,(*arg ? arg:"null"));
     }
 
-    return rtmp_app_live_play(s,st,livestream);
+    return rtmp_app_live_play(s,chunk,livestream);
 }

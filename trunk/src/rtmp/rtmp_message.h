@@ -6,6 +6,13 @@
 #ifndef __MESSAGE_H_INCLUDED__
 #define __MESSAGE_H_INCLUDED__
 
+typedef struct rtmp_message_s rtmp_message_t;
+struct rtmp_message_s {
+    rtmp_chunk_header_t  hdr;
+    mem_buf_t            head_buf;
+    mem_buf_chain_t     *chain;
+};
+
 typedef mem_buf_chain_t* (*rtmp_create_proctol_message_ptr)
     (rtmp_session_t *session,rtmp_chunk_header_t *h);
 

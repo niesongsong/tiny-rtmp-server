@@ -9,8 +9,9 @@
 
 int32_t rtmp_core_cycle(rtmp_session_t *session);
 int32_t rtmp_core_handle_recv(rtmp_session_t *session);
+
 int32_t rtmp_core_handle_message(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st);
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain);
 
 int32_t rtmp_core_update_inbytes(rtmp_session_t *session,
     rtmp_chunk_header_t *h,uint32_t n);
@@ -287,6 +288,9 @@ int32_t rtmp_core_handle_recv(rtmp_session_t *session)
                 temp_buf->last = temp_buf->buf + copy_len;
             }
 
+            /*remove chunk head*/
+            st->last->chunk.buf = payload;
+
             /*an entire message ?*/
             if (st->recvlen == st->hdr.msglen) {
                 rtmp_log(RTMP_LOG_INFO,"[%d][%d]get a message:[%d]:[%d]:[%d]",
@@ -294,7 +298,7 @@ int32_t rtmp_core_handle_recv(rtmp_session_t *session)
                     st->hdr.msgtid,st->hdr.msglen);
 
                 st->timestamp = session->chunk_time;
-                rc = rtmp_core_handle_message(session,st);
+                rc = rtmp_core_handle_message(session,&st->hdr,st->chain);
 
                 if (rc != RTMP_OK) {
                     rtmp_log(RTMP_LOG_ERR,"[%d]message (%d)(%d) handler "
@@ -431,21 +435,20 @@ void rtmp_chain_send(rtmp_event_t *ev)
 }
 
 int32_t rtmp_core_handle_message(rtmp_session_t *session,
-    rtmp_chunk_stream_t *st)
+    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
 {
     rtmp_cycle_t        *cycle;
     rtmp_msg_handler_t **handler;
     
     cycle = session->c->listening->cycle;
-    if (st->hdr.msgtid >= RTMP_MSG_MAX) {
-        rtmp_log(RTMP_LOG_WARNING,"unknown message type id:%d",
-            st->hdr.msgtid);
+    if (chunk->msgtid >= RTMP_MSG_MAX) {
+        rtmp_log(RTMP_LOG_WARNING,"unknown message type id:%d",chunk->msgtid);
         return RTMP_OK;
     }
 
     handler = (rtmp_msg_handler_t**)cycle->msg_handler.elts;
-    if (handler[st->hdr.msgtid]->pt) {
-        return handler[st->hdr.msgtid]->pt(session,st);
+    if (handler[chunk->msgtid]->pt) {
+        return handler[chunk->msgtid]->pt(session,chunk,chain);
     }
 
     return RTMP_OK;
@@ -541,33 +544,43 @@ mem_buf_chain_t* rtmp_core_alloc_chain(rtmp_session_t *session,
 
     chain = mem_alloc_chain_link(pool);
     if (chain) {
-
-        rtmp_log(RTMP_LOG_DEBUG,"[%d]alloc chain:%p",session->sid,chain);
-
-        buf = chain->chunk.buf;
+        buf = chain->chunk_body;
         if (chain->chunk_size < (uint32_t)chunk_size) {
             buf = NULL;
         }
 
         if (buf == NULL) {
-            buf = mem_pcalloc(pool,chunk_size + RTMP_MAX_BASICHEADER);
+            buf = mem_pcalloc(pool,chunk_size + RTMP_MAX_CHUNK_HEADER);
 
             if (buf == NULL) {
                 mem_free_chain_link(pool,chain);
                 return NULL;
             }
 
-            chain->chunk.buf  = buf;
+            chain->chunk_body = buf;
             chain->chunk_size = chunk_size;
         }
 
+        chain->chunk.buf  = buf;
         chain->chunk.last = buf;
-        chain->chunk.end  = buf + chunk_size + RTMP_MAX_BASICHEADER;
+        chain->chunk.end  = buf + chunk_size + RTMP_MAX_CHUNK_HEADER;
         chain->locked = 1;
         chain->next = NULL;
+
+        rtmp_log(RTMP_LOG_DEBUG,"[%d]alloc chain:%p .buf=%p .last=%p .end=%p",
+            session->sid,chain,chain->chunk.buf,
+            chain->chunk.last,chain->chunk.end);
     }
 
     return chain;
+}
+
+void rtmp_core_lock_chains(mem_buf_chain_t *chain)
+{
+    while (chain) {
+        chain->locked++;
+        chain = chain->next;
+    }
 }
 
 void rtmp_core_lock_chain(mem_buf_chain_t *chain)
@@ -579,10 +592,12 @@ void rtmp_core_free_chain(rtmp_session_t *session,
     mem_pool_t *pool,mem_buf_chain_t *chain)
 {
     if (--chain->locked <= 0) {
-        chain->chunk.last = chain->chunk.buf;
+        chain->chunk.last = chain->chunk.buf = chain->chunk_body;
         mem_free_chain_link(pool,chain);
-        rtmp_log(RTMP_LOG_DEBUG,"[%d]free chain:%p",
-            session->sid,chain);
+
+        rtmp_log(RTMP_LOG_DEBUG,"[%d]free chain:%p .buf=%p .last=%p .end=%p",
+            session->sid,chain,chain->chunk.buf,
+            chain->chunk.last,chain->chunk.end);
     }
 }
 

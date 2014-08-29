@@ -56,6 +56,7 @@ CORE_OBJS =	objs/core/rtmp_amf.o \
 	objs/rtmp/rtmp_connect.o\
 	objs/rtmp/rtmp_play.o\
 	objs/rtmp/rtmp_publish.o\
+	objs/rtmp/rtmp_codec.o\
 	objs/rtmp/rtmp_recv.o
 
 #linker
@@ -220,6 +221,12 @@ objs/rtmp/rtmp_stream.o:	$(CORE_DEPS) \
 	$(CC) -c $(CFLAGS) $(CORE_INCS) \
 		-o objs/rtmp/rtmp_stream.o \
 		src/rtmp/rtmp_stream.c
+
+objs/rtmp/rtmp_codec.o:	$(CORE_DEPS) \
+	src/rtmp/rtmp_codec.c
+	$(CC) -c $(CFLAGS) $(CORE_INCS) \
+		-o objs/rtmp/rtmp_codec.o \
+		src/rtmp/rtmp_codec.c
 
 objs/rtmp/rtmp_core_conf.o:	$(CORE_DEPS) \
 	src/rtmp/rtmp_core_conf.c
