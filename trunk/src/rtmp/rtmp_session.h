@@ -38,7 +38,6 @@ struct rtmp_session_s {
     /*chunk info*/
     rtmp_chunk_stream_t   **chunk_streams;
     uint32_t                chunk_time;
-    uint32_t                last_chunk;
     uint32_t                max_streams;
         
     /*lives info*/

@@ -458,21 +458,14 @@ int32_t rtmp_core_message_info(rtmp_session_t *session,
     rtmp_chunk_header_t *h)
 {
     rtmp_chunk_stream_t *last;
+    last = session->chunk_streams[h->csid];
 
-    if (((session->last_chunk == (uint32_t)-1) && (h->fmt > 0))
-      || (h->csid < 2)) 
-    {
+    if (((last == NULL) && (h->fmt > 0)) || (h->csid < 2)) {
         return RTMP_FAILED;
     }
 
     if ((session->chunk_time == (uint32_t)-1) && h->fmt > 0) {
         return RTMP_FAILED;
-    }
-
-    if (h->fmt != 0) {
-        last = session->chunk_streams[session->last_chunk];
-    } else {
-        last = 0;
     }
 
     switch (h->fmt) {
@@ -532,7 +525,6 @@ int32_t rtmp_core_update_chunk_time(rtmp_session_t *session,
         }
     }
 
-    session->last_chunk = h->csid;
     return RTMP_OK;
 }
 

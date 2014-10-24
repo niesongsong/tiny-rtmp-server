@@ -90,7 +90,6 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
 
     session->temp_pool = temp_pool;
     session->chunk_time = -1;
-    session->last_chunk = -1;
 
     rtmp_log(RTMP_LOG_INFO,"[%d]create session",session->sid);
 
