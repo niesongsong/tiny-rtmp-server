@@ -113,9 +113,6 @@ int32_t rtmp_handler_init(rtmp_cycle_t *cycle);
 mem_buf_t* rtmp_prepare_amf_buffer(mem_pool_t *temp_pool,
     amf_data_t **amf,uint32_t num);
 
-mem_buf_t* rtmp_copy_chains_to_temp_buf(mem_buf_chain_t *chain_in,
-    mem_pool_t *temp_pool);
-
 uint32_t rtmp_hash_key(const u_char *data, size_t len);
 uint32_t rtmp_hash_string(const char *data);
 

@@ -20,7 +20,6 @@ struct rtmp_listening_s {
     void                   *data;
 };
 
-
 struct rtmp_connection_s {
     void               *data;
 

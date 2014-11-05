@@ -174,6 +174,9 @@
     <ClCompile Include="..\..\src\os\unix\rtmp_signal.c">
       <Filter>源文件\os\unix</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\rtmp\rtmp_codec.c">
+      <Filter>源文件\rtmp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\rtmp_amf.h">
@@ -259,6 +262,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\rtmp_def.h">
       <Filter>源文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtmp\rtmp_codec.h">
+      <Filter>源文件\rtmp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

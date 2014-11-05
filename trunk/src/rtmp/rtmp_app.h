@@ -84,7 +84,6 @@ int32_t rtmp_app_live_publish(rtmp_session_t *session,
 int32_t rtmp_app_live_play(rtmp_session_t *session,
     rtmp_chunk_header_t *chunk,const char *livestream);
 
-
 void rtmp_app_live_free(rtmp_app_t *app,rtmp_live_stream_t *live);
 
 void rtmp_app_live_release(rtmp_live_link_t *link);

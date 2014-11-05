@@ -1,5 +1,4 @@
 
-
 /*
  * CopyLeft (C) nie950@gmail.com
  */
@@ -15,6 +14,7 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
     struct sockaddr_in  *addr_in;
     uint32_t             ssz,lsz,i;
     mem_pool_t          *temp_pool;
+    rtmp_message_t      *msg;
 
     /*get local address*/
     socklen = sizeof(c->local_sockaddr);
@@ -79,11 +79,19 @@ rtmp_session_t *rtmp_session_create(rtmp_connection_t *c)
 
     session->out_chunk_size = RTMP_DEFAULT_OUT_CHUNKSIZE;
     session->out_queue = c->listening->cycle->out_queue;
-    session->out_chain = mem_pcalloc(pool,session->out_queue*sizeof(void*));
-    if (session->out_chain == NULL) {
+    
+    msg = mem_pcalloc(pool,session->out_queue * sizeof(rtmp_message_t));
+    if (msg == NULL) {
         return NULL;
     }
 
+    session->out_message = msg;
+    for (i = 0;i < session->out_queue;i++) {
+        msg[i].head.buf  = msg[i].head_buf;
+        msg[i].head.end  = msg[i].head_buf + sizeof(msg[i].head_buf);
+        msg[i].head.last = msg[i].head.end;
+    }
+    
     session->c = c;
     session->pool = c->pool; 
     session->sid = c->fd;
@@ -111,9 +119,9 @@ int32_t rtmp_session_destroy(rtmp_session_t * session)
 
     /*free chains*/
     for (i = 0;i < session->out_queue;i++) {
-        if (session->out_chain[i] != NULL) {
+        if (session->out_message[i].chain != NULL) {
             rtmp_core_free_chains(session,session->chunk_pool,
-                session->out_chain[i]);
+                session->out_message[i].chain);
         }
     }
 

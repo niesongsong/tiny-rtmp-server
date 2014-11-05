@@ -49,7 +49,7 @@ struct rtmp_session_s {
     mem_buf_chain_t        *in_chain;
 
     /*chain out*/
-    mem_buf_chain_t       **out_chain;      /*out chain*/
+    rtmp_message_t         *out_message;    /*out message*/
     uint32_t                out_front;      /*queue front*/
     uint32_t                out_rear;       /*queue rear*/
     uint32_t                out_queue;      /*queue capacity*/

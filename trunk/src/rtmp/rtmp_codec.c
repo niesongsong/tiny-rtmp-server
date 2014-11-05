@@ -39,7 +39,7 @@ uint32_t rtmp_parse_aac_header(rtmp_session_t *session,mem_buf_chain_t *chain,
     mem_bits_t           bitstream;
     uint32_t             idx;
 
-    buf = rtmp_copy_chains_to_temp_buf(chain,session->temp_pool);
+    buf = rtmp_copy_chain_to_buf(chain,session->temp_pool);
     if (buf == NULL) {
         return RTMP_FAILED;
     }
@@ -99,7 +99,7 @@ uint32_t rtmp_parse_avc_header(rtmp_session_t *session,mem_buf_chain_t *chain,
     mem_bits_t  bitstream;
 
 
-    buf = rtmp_copy_chains_to_temp_buf(chain,session->temp_pool);
+    buf = rtmp_copy_chain_to_buf(chain,session->temp_pool);
     if (buf == NULL) {
         return RTMP_FAILED;
     }

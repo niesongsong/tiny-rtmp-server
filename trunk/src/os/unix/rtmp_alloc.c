@@ -22,6 +22,7 @@ void *mem_alloc(size_t size)
     if (p == NULL) {
         rtmp_log(RTMP_LOG_WARNING, "malloc(%u) failed", size);
     }
+    rtmp_log(RTMP_LOG_DEBUG, "malloc(%u) failed", size);
 
     return p;
 }

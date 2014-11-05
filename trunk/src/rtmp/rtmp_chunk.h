@@ -65,11 +65,11 @@ struct rtmp_chunk_header_s{
     uint32_t        msgsid;
 
     uint32_t        extend;
+    uint32_t        chunk_time;
 };
 
 struct rtmp_chunk_stream_s {
     rtmp_chunk_header_t   hdr;
-    uint32_t              timestamp;
     uint32_t              recvlen; 
     mem_buf_chain_t      *chain;
     mem_buf_chain_t      *last;

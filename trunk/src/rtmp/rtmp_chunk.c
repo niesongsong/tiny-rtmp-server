@@ -6,48 +6,6 @@
 #include "rtmp_config.h"
 #include "rtmp_core.h"
 
-#if 0
-
-#define MAKE_ULONG3_B(p)                                      \
-    ((uint32_t)((p)[0]) << 16) + ((uint32_t)((p)[1]) << 8)    \
-    +(uint32_t)((p)[2])
-
-#define MAKE_ULONG3_L(p)                                      \
-    ((uint32_t)((p)[2]) << 16) + ((uint32_t)((p)[1]) << 8)    \
-    +(uint32_t)((p)[0])
-
-#define MAKE_ULONG4_B(p)                                      \
-    ((uint32_t)((p)[0]) << 24) + ((uint32_t)((p)[1]) << 16)   \
-   +((uint32_t)((p)[2]) << 8)  +  (uint32_t)((p)[3])
-
-#define MAKE_ULONG4_L(p)                                      \
-    ((uint32_t)((p)[3]) << 24) + ((uint32_t)((p)[2]) << 16)   \
-   +((uint32_t)((p)[1]) << 8)  +  (uint32_t)((p)[0])
-
-#define MAKE_BYTE4_L(p,ul)                                    \
-    p[0] = (char)(ul);                                        \
-    p[1] = (char)(ul >> 8);                                   \
-    p[2] = (char)(ul >> 16);                                  \
-    p[3] = (char)(ul >> 24)
-
-#define MAKE_BYTE3_B(p,ul)                                    \
-    p[0] = (char)(ul >> 16);                                  \
-    p[1] = (char)(ul >> 8);                                   \
-    p[2] = (char)(ul)
-
-
-#define MAKE_BYTE4_B(p,ul)                                    \
-    p[0] = (char)(ul >> 24);                                  \
-    p[1] = (char)(ul >> 16);                                  \
-    p[2] = (char)(ul >> 8);                                   \
-    p[3] = (char)(ul)
-
-#define MAKE_BYTE3_L(p,ul)                                    \
-    p[0] = (char)(ul);                                        \
-    p[1] = (char)(ul >> 8);                                   \
-    p[2] = (char)(ul >> 16)
-#endif
-
 uint8_t* rtmp_chunk_read(mem_buf_t *buf,rtmp_chunk_header_t *h)
 {
     uint32_t                csid;

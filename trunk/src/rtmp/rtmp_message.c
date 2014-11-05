@@ -9,11 +9,8 @@
 #define RTMP_PROTO_HEAD_LEN   12
 
 static mem_buf_chain_t *
-rtmp_create_proctol_message(rtmp_session_t *session,uint8_t type,uint8_t len);
-
-static mem_buf_chain_t *
-rtmp_create_status_message(rtmp_session_t *session,rtmp_chunk_header_t *h,
-    char *code, char* level,char *desc);
+rtmp_create_status_chain(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    char *code, char* level,char *desc,rtmp_chunk_header_t *hdr);
 
 /*
  * 5.4. Protocol Control Messages
@@ -32,11 +29,11 @@ rtmp_create_status_message(rtmp_session_t *session,rtmp_chunk_header_t *h,
  *
  */
 
-static mem_buf_chain_t *
-rtmp_create_proctol_message(rtmp_session_t *session,uint8_t type,uint8_t len)
+static 
+mem_buf_chain_t * rtmp_create_proctol_chain(rtmp_session_t *session,
+    uint8_t type,uint8_t len,rtmp_chunk_header_t *hdr)
 {
     mem_buf_chain_t *chain;
-    uint8_t         *head;
 
     if (type < RTMP_MSG_CHUNK_SIZE || type > RTMP_MSG_BANDWIDTH) {
         return NULL;
@@ -53,97 +50,86 @@ rtmp_create_proctol_message(rtmp_session_t *session,uint8_t type,uint8_t len)
     if (chain == NULL) {
         return NULL;
     }
-
-    head = chain->chunk.buf + RTMP_MAX_CHUNK_HEADER - RTMP_PROTO_HEAD_LEN;
-
-    chain->chunk.last = head + RTMP_PROTO_HEAD_LEN;
+    chain->chunk.last = chain->chunk.buf + RTMP_MAX_CHUNK_HEADER;
     chain->chunk.end = chain->chunk.last + len;
-    
-    memset(head,0,RTMP_PROTO_HEAD_LEN);
 
-    /*fmt = 0, csid = 2*/
-    head[0] = 0x02; 
-    
-    /*head[1] ~ head[3]: timestamp ignored*/
-    
-    /*head[4] ~ head[6]: len*/
-    head[6] = len;
+    memset(hdr,0,sizeof(rtmp_chunk_header_t));
 
-    /*head[7]: type id*/
-    head[7] = type;
+    hdr->fmt = 0;
+    hdr->csid = 2;
+    hdr->msglen = len;
+    hdr->msgtid = type;
 
-    /*head[8] ~ head[11]: message id = 0*/
-    
     return chain;
 }
 
 mem_buf_chain_t* 
-rtmp_create_set_chunk_size(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_set_chunk_size(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
     mem_buf_chain_t *chain;
 
-    chain = rtmp_create_proctol_message(session,RTMP_MSG_CHUNK_SIZE,4);
+    chain = rtmp_create_proctol_chain(session,RTMP_MSG_CHUNK_SIZE,4,hdr);
     if (chain) {
         ulong_make_byte4(chain->chunk.last,session->out_chunk_size);
-        chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
     return chain;
 }
 
 mem_buf_chain_t* 
-rtmp_create_ack_size(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_ack_size(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
     mem_buf_chain_t *chain;
 
-    chain = rtmp_create_proctol_message(session,RTMP_MSG_ACK_SIZE,4);
+    chain = rtmp_create_proctol_chain(session,RTMP_MSG_ACK_SIZE,4,hdr);
     if (chain) {
         ulong_make_byte4(chain->chunk.last,session->ack_window);
-        chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
     return chain;
 }
 
 mem_buf_chain_t* 
-rtmp_create_ack(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_ack(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
     mem_buf_chain_t *chain;
 
-    chain = rtmp_create_proctol_message(session,RTMP_MSG_ACK,4);
+    chain = rtmp_create_proctol_chain(session,RTMP_MSG_ACK,4,hdr);
     if (chain) {
         ulong_make_byte4(chain->chunk.last,session->in_bytes);
-        chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
     return chain;
 }
 
 mem_buf_chain_t* 
-rtmp_create_peer_bandwidth_size(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_peer_bandwidth_size(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
     mem_buf_chain_t *chain;
 
-    chain = rtmp_create_proctol_message(session,RTMP_MSG_BANDWIDTH,5);
+    chain = rtmp_create_proctol_chain(session,RTMP_MSG_BANDWIDTH,5,hdr);
     if (chain) {
         ulong_make_byte4(chain->chunk.last,session->ack_window);
         chain->chunk.last[4] = 0x02;
-        chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
     return chain;
 }
 
 mem_buf_chain_t* 
-rtmp_create_user_begin(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_user_begin(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
     mem_buf_chain_t *chain;
 
-    chain = rtmp_create_proctol_message(session,RTMP_MSG_USER,6);
+    chain = rtmp_create_proctol_chain(session,RTMP_MSG_USER,6,hdr);
     if (chain) {
         memset(chain->chunk.last,0,6);
         chain->chunk.last[5] = 0x01;
-        chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
     return chain;
@@ -235,40 +221,67 @@ mem_buf_chain_t* rtmp_prepare_memssage_chain(rtmp_session_t *session,
     return head;
 }
 
-mem_buf_chain_t* rtmp_prepare_memssage_buf(rtmp_session_t *session,
-    rtmp_chunk_header_t *sthead,mem_buf_t *message)
+mem_buf_t* rtmp_copy_chain_to_buf(mem_buf_chain_t *chain_in,
+    mem_pool_t *temp_pool)
+{
+    mem_buf_t           *buf;
+    mem_buf_chain_t     *chain;
+    int32_t              ncopy;
+
+    buf = mem_palloc(temp_pool,sizeof(mem_buf_t));
+    if (buf == NULL) {
+        return NULL;
+    }
+
+    if (chain_in->next == NULL) {
+
+        *buf = chain_in->chunk;
+
+    } else {
+        ncopy = 0;
+        chain = chain_in;
+        while (chain) {
+            ncopy += chain->chunk.last - chain->chunk.buf;
+            chain = chain->next;
+        }
+
+        buf->buf = mem_palloc(temp_pool,ncopy);
+        if (buf->buf == NULL) {
+            return NULL;
+        }
+
+        buf->last = buf->buf;
+        buf->end = buf->buf + ncopy;
+        ncopy = 0;
+
+        chain = chain_in;
+        while (chain) {
+            ncopy = chain->chunk.last - chain->chunk.buf;
+            if (ncopy > 0) {
+                memcpy(buf->last,chain->chunk.buf,ncopy);
+                buf->last += ncopy;
+            }
+            chain = chain->next;
+        }
+    }
+
+    return buf;
+}
+
+mem_buf_chain_t *rtmp_copy_buf_to_chain(rtmp_session_t *session,
+    mem_buf_t *buf)
 {
     int32_t              mlen,nchains,n,m;
-    mem_buf_chain_t     *chain,*next;
-    rtmp_chunk_header_t  hdr;
-    mem_buf_t            buf;
-    uint8_t              headbuf[RTMP_MAX_CHUNK_HEADER],*body;
     mem_pool_t          *chunk_pool;
+    mem_buf_chain_t     *chain,*next;
+    uint8_t             *body;
 
-
-    mlen = message->last - message->buf;
+    mlen = buf->last - buf->buf;
     nchains = (mlen + session->out_chunk_size - 1)/session->out_chunk_size;
-    
-    hdr = *sthead;
-    hdr.msglen = mlen;
-
-    buf.buf = headbuf;
-    buf.end = headbuf + sizeof(headbuf);
 
     chunk_pool = session->chunk_pool;
     chain = NULL;
     for (next = NULL,n = nchains; n > 0; n--) {
-
-        buf.last = headbuf;
-        if (rtmp_chunk_write(&buf,&hdr) == -1) {
-            rtmp_log(RTMP_LOG_ERR,"[%d] write basic header failed!",session->sid);
-
-            if (next) {
-                rtmp_core_free_chains(session,chunk_pool,next);
-            }
-
-            break;
-        }
 
         chain = rtmp_core_alloc_chain(session,chunk_pool,session->out_chunk_size);
 
@@ -281,30 +294,44 @@ mem_buf_chain_t* rtmp_prepare_memssage_buf(rtmp_session_t *session,
 
         body = chain->chunk.buf + RTMP_MAX_CHUNK_HEADER;
 
-        /*copy head*/
-        chain->chunk.last = body - (buf.last - buf.buf);
-        memcpy(chain->chunk.last,buf.buf,buf.last - buf.buf);
-
-        /*copy message*/
+        /*copy message to chain*/
         m = rtmp_min(mlen,(int32_t)session->out_chunk_size);
-        memcpy(body,message->last - mlen,m);
+        memcpy(body,buf->last - mlen,m);
+
         chain->chunk.end = body + m;
+        chain->chunk.last = body;
         mlen -= m;
 
         chain->next = next;
         next = chain;
-
-        hdr.fmt = 3;
     }
 
     return chain;
 }
 
-int32_t rtmp_append_message_chain(rtmp_session_t *session,
-    mem_buf_chain_t *chain)
+mem_buf_chain_t *rtmp_copy_chain_to_chain(rtmp_session_t *session,
+    mem_buf_chain_t *in_chain)
 {
-    uint32_t    front;
+    mem_buf_t       *buf;
 
+    buf = rtmp_copy_chain_to_buf(in_chain,session->temp_pool);
+    if (buf == NULL) {
+        return NULL;
+    }
+
+    return rtmp_copy_buf_to_chain(session,buf);
+}
+
+int32_t rtmp_append_message_chain(rtmp_session_t *session,
+    mem_buf_chain_t *chain,rtmp_chunk_header_t *hdr)
+{
+    uint32_t            front,mlen=0;
+    rtmp_message_t     *msg;
+    mem_buf_chain_t    *next;
+    mem_buf_t           head;
+    uint8_t             headbuf[RTMP_MAX_CHUNK_HEADER];
+    rtmp_chunk_header_t fh; /*fragment header*/
+    
     front = session->out_front;
 
     front = (front + 1) % session->out_queue;
@@ -313,23 +340,59 @@ int32_t rtmp_append_message_chain(rtmp_session_t *session,
         return RTMP_FAILED;
     }
 
-    session->out_chain[session->out_front] = chain;
+    fh = *hdr;
+
+    fh.fmt = 3;
+
+    head.buf  = headbuf;
+    head.last = headbuf;
+    head.end  = headbuf + sizeof (headbuf);
+
+    if (rtmp_chunk_write(&head,hdr) == -1) {
+        return RTMP_FAILED;
+    }
+
+    msg = &session->out_message[session->out_front];
+
+    /*prepare chunk head*/
+    msg->head.last -= head.last - head.buf;
+    memcpy(msg->head.last,head.buf,head.last - head.buf);
     session->out_front = front;
+
+    while (chain->next) {
+        next = chain->next;
+
+        head.buf  = headbuf;
+        head.last = headbuf;
+        head.end  = headbuf + sizeof (headbuf);
+
+        if (rtmp_chunk_write(&head,&fh) == -1) {
+            return RTMP_FAILED;
+        }
+
+        chain->chunk.last -= head.last - head.buf;
+        memcpy(chain->chunk.last,head.buf,head.last - head.buf);
+    }
+
+    msg->chain = chain;
+    msg->hdr = *hdr;
 
     return RTMP_OK;
 }
 
 int32_t rtmp_create_append_chain(rtmp_session_t *session,
-    rtmp_create_proctol_message_ptr ptr,rtmp_chunk_header_t *h)
+    rtmp_create_proctol_message_ptr ptr,
+    rtmp_chunk_header_t *h)
 {
-    mem_buf_chain_t *chain;
+    mem_buf_chain_t     *chain;
+    rtmp_chunk_header_t  nh;
 
-    chain = ptr(session,h);
+    chain = ptr(session,h,&nh);
     if (chain == NULL) {
         return RTMP_FAILED;
     }
 
-    if (rtmp_append_message_chain(session,chain) == -1) {
+    if (rtmp_append_message_chain(session,chain,&nh) == -1) {
         rtmp_core_free_chains(session,session->chunk_pool,chain);
         return RTMP_FAILED;
     }
@@ -338,55 +401,61 @@ int32_t rtmp_create_append_chain(rtmp_session_t *session,
 }
 
 mem_buf_chain_t* 
-rtmp_create_play_reset(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_play_reset(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
-    return rtmp_create_status_message(session,h,
-        "NetStream.Play.Reset","status","Playing and resetting .");
+    return rtmp_create_status_chain(session,h,
+        "NetStream.Play.Reset","status","Playing and resetting .",hdr);
 }
 
 mem_buf_chain_t* 
-rtmp_create_play_start(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_play_start(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
-    return rtmp_create_status_message(session,h,
-        "NetStream.Play.Start","status","Start live");
+    return rtmp_create_status_chain(session,h,
+        "NetStream.Play.Start","status","Start live",hdr);
 }
 
 mem_buf_chain_t* 
-rtmp_create_publish_badname(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_publish_badname(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
-    return rtmp_create_status_message(session,h,
-        "NetStream.Publish.BadName","error","Already publishing");
+    return rtmp_create_status_chain(session,h,
+        "NetStream.Publish.BadName","error","Already publishing",hdr);
 }
 
 mem_buf_chain_t* 
-rtmp_create_publish_start(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_publish_start(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
-    return rtmp_create_status_message(session,h,
-        "NetStream.Publish.Start","status","Start publishing");
+    return rtmp_create_status_chain(session,h,
+        "NetStream.Publish.Start","status","Start publishing",hdr);
 }
 
 mem_buf_chain_t* 
-rtmp_create_play_not_found(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_play_not_found(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
-    return rtmp_create_status_message(session,h,
-        "NetStream.Play.StreamNotFound","error","No such stream");
+    return rtmp_create_status_chain(session,h,
+        "NetStream.Play.StreamNotFound","error","No such stream",hdr);
 }
 
 mem_buf_chain_t* 
-rtmp_create_publish_not_found(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_publish_not_found(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
-    return rtmp_create_status_message(session,h,
-        "NetStream.Publish.StreamNotFound","error","No such stream");
+    return rtmp_create_status_chain(session,h,
+        "NetStream.Publish.StreamNotFound","error","No such stream",hdr);
 }
 
 
 mem_buf_chain_t* 
-rtmp_create_sample_access(rtmp_session_t *session,rtmp_chunk_header_t *h)
+rtmp_create_sample_access(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    rtmp_chunk_header_t *hdr)
 {
     amf_data_t              *amf[3];
     mem_buf_t               *buf;
     mem_buf_chain_t         *chain;
-    rtmp_chunk_header_t      hdr;
 
     amf[0] = amf_new_string("|RtmpSampleAccess",0);
     amf[1] = amf_new_bool(0);
@@ -397,16 +466,16 @@ rtmp_create_sample_access(rtmp_session_t *session,rtmp_chunk_header_t *h)
         return NULL;
     }
 
-    memset(&hdr,0,sizeof(hdr));
+    memset(hdr,0,sizeof(rtmp_chunk_header_t));
 
-    hdr.fmt = 0;
-    hdr.csid = 4;
+    hdr->fmt = 0;
+    hdr->csid = 4;
 
-    hdr.msglen = buf->last - buf->buf;
-    hdr.msgtid = RTMP_MSG_AMF_META;
-    hdr.msgsid = 1;
+    hdr->msglen = buf->last - buf->buf;
+    hdr->msgtid = RTMP_MSG_AMF_META;
+    hdr->msgsid = 1;
 
-    chain = rtmp_prepare_memssage_buf(session,&hdr,buf);
+    chain = rtmp_copy_buf_to_chain(session,buf);
 
     if (chain == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]prepare message failed!",
@@ -417,13 +486,12 @@ rtmp_create_sample_access(rtmp_session_t *session,rtmp_chunk_header_t *h)
 }
 
 mem_buf_chain_t*
-rtmp_create_status_message(rtmp_session_t *session,rtmp_chunk_header_t *h,
-    char *code, char* level,char *desc)
+rtmp_create_status_chain(rtmp_session_t *session,rtmp_chunk_header_t *h,
+    char *code, char* level,char *desc,rtmp_chunk_header_t *hdr)
 {
     amf_data_t              *amf[4];
     mem_buf_t               *buf;
     mem_buf_chain_t         *chain;
-    rtmp_chunk_header_t      hdr;
 
     amf[0] = amf_new_string("onStatus",0);
     amf[1] = amf_new_number(0.0);
@@ -439,60 +507,56 @@ rtmp_create_status_message(rtmp_session_t *session,rtmp_chunk_header_t *h,
         return NULL;
     }
 
-    memset(&hdr,0,sizeof(hdr));
+    memset(hdr,0,sizeof(rtmp_chunk_header_t));
 
-    hdr.fmt = 0;
-    hdr.csid = 4;
+    hdr->fmt = 0;
+    hdr->csid = 4;
+    hdr->msglen = buf->last - buf->buf;
+    hdr->msgtid = RTMP_MSG_AMF_CMD;
+    hdr->msgsid = h->msgsid;
 
-    hdr.msglen = buf->last - buf->buf;
-    hdr.msgtid = RTMP_MSG_AMF_CMD;
-    hdr.msgsid = h->msgsid;
-
-    chain = rtmp_prepare_memssage_buf(session,&hdr,buf);
+    chain = rtmp_copy_buf_to_chain(session,buf);
 
     if (chain == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]prepare message failed!",
             session->sid);
-
     }
 
     return chain;
 }
 
 mem_buf_chain_t* 
-rtmp_create_ping_request(rtmp_session_t *session,uint32_t timestamp)
+rtmp_create_ping_request(rtmp_session_t *session,uint32_t timestamp,
+    rtmp_chunk_header_t *hdr)
 {
     mem_buf_chain_t *chain;
     uint8_t         *last;
 
-    chain = rtmp_create_proctol_message(session,RTMP_MSG_USER,6);
+    chain = rtmp_create_proctol_chain(session,RTMP_MSG_USER,6,hdr);
     if (chain) {
 
         last = chain->chunk.last;
 
         ulong_make_byte2(last,RTMP_USER_PING_REQUEST);
         ulong_make_byte4(last+2,timestamp);
-
-        chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
     return chain;
 }
 
 mem_buf_chain_t* 
-rtmp_create_ping_response(rtmp_session_t *session,uint32_t timestamp)
+rtmp_create_ping_response(rtmp_session_t *session,uint32_t timestamp,
+    rtmp_chunk_header_t *hdr)
 {
     mem_buf_chain_t *chain;
     uint8_t         *last;
 
-    chain = rtmp_create_proctol_message(session,RTMP_MSG_USER,6);
+    chain = rtmp_create_proctol_chain(session,RTMP_MSG_USER,6,hdr);
     if (chain) {
         last = chain->chunk.last;
 
         ulong_make_byte2(last,RTMP_USER_PING_RESPONSE);
         ulong_make_byte4(last+2,timestamp);
-  
-        chain->chunk.last -= RTMP_PROTO_HEAD_LEN;
     }
 
     return chain;

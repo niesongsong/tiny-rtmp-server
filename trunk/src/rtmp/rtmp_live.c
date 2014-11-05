@@ -16,12 +16,12 @@ static uint8_t rtmp_get_video_frame_type(mem_buf_chain_t *chain)
 }
 
 static int32_t rtmp_live_send_avdata(rtmp_live_link_t *client,
-    rtmp_chunk_header_t *chunk,mem_buf_chain_t *chain)
+    rtmp_chunk_header_t *hdr,mem_buf_chain_t *chain)
 {
     rtmp_session_t     *session;
 
     session = client->session;
-    if (rtmp_append_message_chain(session,chain) != RTMP_OK) {
+    if (rtmp_append_message_chain(session,chain,hdr) != RTMP_OK) {
         rtmp_core_free_chains(session,session->chunk_pool,chain);
         rtmp_log(RTMP_LOG_DEBUG,"[%d] drop message",session->sid);
     }
@@ -32,16 +32,16 @@ static int32_t rtmp_live_send_avdata(rtmp_live_link_t *client,
     return RTMP_OK;
 }
 
-int32_t rtmp_handler_audio(rtmp_session_t *s,rtmp_chunk_header_t *chunk,
-    mem_buf_chain_t *msg)
+int32_t rtmp_handler_audio(rtmp_session_t *s,rtmp_chunk_header_t *hdr,
+    mem_buf_chain_t *chain)
 {
-    return rtmp_handler_avdata(s,chunk,msg);
+    return rtmp_handler_avdata(s,hdr,chain);
 }
 
-int32_t rtmp_handler_video(rtmp_session_t *s,rtmp_chunk_header_t *chunk,
-    mem_buf_chain_t *msg)
+int32_t rtmp_handler_video(rtmp_session_t *s,rtmp_chunk_header_t *hdr,
+    mem_buf_chain_t *chain)
 {
-    return rtmp_handler_avdata(s,chunk,msg);
+    return rtmp_handler_avdata(s,hdr,chain);
 }
 
 int32_t rtmp_handler_avdata(rtmp_session_t *session,rtmp_chunk_header_t *chunk,
@@ -81,13 +81,7 @@ int32_t rtmp_handler_avdata(rtmp_session_t *session,rtmp_chunk_header_t *chunk,
         return RTMP_OK;
     }
 
-    chain = rtmp_prepare_memssage_chain(session,chunk,in_chain);
-    if (chain == NULL) {
-        rtmp_log(RTMP_LOG_WARNING,"[%d]crtmp_message_copy_to_chain() failed!",
-            session->sid);
-        return RTMP_FAILED;
-    }
-
+    chain = rtmp_copy_chain_to_chain(session,in_chain);
     live = link->lvst;
 
     /*broad cast*/

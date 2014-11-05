@@ -53,6 +53,7 @@
     <ClCompile Include="..\..\src\os\win32\rtmp_socket.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_app.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_chunk.c" />
+    <ClCompile Include="..\..\src\rtmp\rtmp_codec.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_connect.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_core.c" />
     <ClCompile Include="..\..\src\rtmp\rtmp_core_conf.c" />
@@ -94,6 +95,7 @@
     <ClInclude Include="..\..\src\os\win32\rtmp_win32_config.h" />
     <ClInclude Include="..\..\src\rtmp\rtmp_app.h" />
     <ClInclude Include="..\..\src\rtmp\rtmp_chunk.h" />
+    <ClInclude Include="..\..\src\rtmp\rtmp_codec.h" />
     <ClInclude Include="..\..\src\rtmp\rtmp_core.h" />
     <ClCompile Include="..\..\src\rtmp\rtmp_core_module.c">
       <FileType>CppHeader</FileType>

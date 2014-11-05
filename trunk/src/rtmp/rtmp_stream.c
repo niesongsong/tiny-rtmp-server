@@ -8,7 +8,7 @@
 #include "rtmp_core.h"
 
 int32_t rtmp_amf_cmd_createstream(rtmp_session_t *session,
-    rtmp_chunk_header_t *chunk,amf_data_t *amf[],uint32_t num)
+    rtmp_chunk_header_t *hdr,amf_data_t *amf[],uint32_t num)
 {
     amf_data_t             *amf_response[4];
     mem_buf_t              *buf; 
@@ -16,7 +16,7 @@ int32_t rtmp_amf_cmd_createstream(rtmp_session_t *session,
     uint32_t                lsid;
     rtmp_chunk_header_t     h;
 
-    h = *chunk;
+    h = *hdr;
     
     if (num != 3) {
         rtmp_log(RTMP_LOG_ERR,"[%d]amf number[%d] error!",session->sid,num);
@@ -56,14 +56,18 @@ int32_t rtmp_amf_cmd_createstream(rtmp_session_t *session,
         h.msgtid = RTMP_MSG_AMF_CMD;
     }
 
-    chain = rtmp_prepare_memssage_buf(session,&h,buf);
+    chain = rtmp_copy_buf_to_chain(session,buf);
+
     if (chain == NULL) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]prepare connect app message failed!",
             session->sid);
         return RTMP_FAILED;
     }
 
-    if (rtmp_append_message_chain(session,chain) == -1) {
+    h.msglen = buf->last - buf->buf;
+    h.fmt = 0;
+
+    if (rtmp_append_message_chain(session,chain,&h) == -1) {
         rtmp_log(RTMP_LOG_WARNING,"[%d]append connect app message failed!",
             session->sid);
         return RTMP_FAILED;

@@ -88,8 +88,7 @@ int32_t rtmp_handler_chunksize(rtmp_session_t *session,
     mem_buf_t           *buf;
     uint32_t             chunksize;
 
-    mem_reset_pool(session->temp_pool);
-    buf = rtmp_copy_chains_to_temp_buf(chain,session->temp_pool);
+    buf = rtmp_copy_chain_to_buf(chain,session->temp_pool);
     if (buf == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]copy chain failed!",session->sid);
         return RTMP_FAILED;
@@ -128,8 +127,7 @@ int32_t rtmp_handler_user(rtmp_session_t *session,
     mem_buf_t           *buf;
     uint16_t             evt;
 
-    mem_reset_pool(session->temp_pool);
-    buf = rtmp_copy_chains_to_temp_buf(chain,session->temp_pool);
+    buf = rtmp_copy_chain_to_buf(chain,session->temp_pool);
     if (buf == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]copy chain failed!",session->sid);
         return RTMP_FAILED;
@@ -174,53 +172,6 @@ int32_t rtmp_handler_user(rtmp_session_t *session,
     return RTMP_OK;
 }
 
-mem_buf_t* rtmp_copy_chains_to_temp_buf(mem_buf_chain_t *chain_in,
-    mem_pool_t *temp_pool)
-{
-    mem_buf_t           *buf;
-    mem_buf_chain_t     *chain;
-    int32_t              ncopy;
-
-    buf = mem_palloc(temp_pool,sizeof(mem_buf_t));
-    if (buf == NULL) {
-        return NULL;
-    }
-
-    if (chain_in->next == NULL) {
-
-        *buf = chain_in->chunk;
-
-    } else {
-        ncopy = 0;
-        chain = chain_in;
-        while (chain) {
-            ncopy += chain->chunk.last - chain->chunk.buf;
-            chain = chain->next;
-        }
-
-        buf->buf = mem_palloc(temp_pool,ncopy);
-        if (buf->buf == NULL) {
-            return NULL;
-        }
-
-        buf->last = buf->buf;
-        buf->end = buf->buf + ncopy;
-        ncopy = 0;
-
-        chain = chain_in;
-        while (chain) {
-            ncopy = chain->chunk.last - chain->chunk.buf;
-            if (ncopy > 0) {
-                memcpy(buf->last,chain->chunk.buf,ncopy);
-                buf->last += ncopy;
-            }
-            chain = chain->next;
-        }
-    }
-
-    return buf;
-}
-
 int32_t rtmp_handler_acksize(rtmp_session_t *s,
     rtmp_chunk_header_t *chunk,mem_buf_chain_t *msg)
 {
@@ -258,8 +209,7 @@ int32_t rtmp_handler_amf0_amf3cmd(rtmp_session_t *session,
 
     amf_init(rtmp_amf_pmalloc,rtmp_amf_pfree,session->temp_pool);
 
-    mem_reset_pool(session->temp_pool);
-    buf = rtmp_copy_chains_to_temp_buf(chain,session->temp_pool);
+    buf = rtmp_copy_chain_to_buf(chain,session->temp_pool);
     if (buf == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]copy chain failed!",session->sid);
         return RTMP_FAILED;
@@ -373,14 +323,14 @@ int32_t rtmp_amf_cmd_pause(rtmp_session_t *s,
 }
 
 void rtmp_send_ping_response(rtmp_session_t *session,
-    rtmp_chunk_header_t *chunk,mem_buf_t *buf)
+    rtmp_chunk_header_t *hdr,mem_buf_t *buf)
 {
     uint32_t            timestamp;
     int32_t             rc;
     mem_buf_chain_t    *chain;
 
     timestamp = byte_make_ulong4(buf->buf+1);
-    chain = rtmp_create_ping_response(session,timestamp);
+    chain = rtmp_create_ping_response(session,timestamp,hdr);
 
     if (chain == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]create ping response failed!",
@@ -388,7 +338,7 @@ void rtmp_send_ping_response(rtmp_session_t *session,
         return;
     }
 
-    rc = rtmp_append_message_chain(session,chain);
+    rc = rtmp_append_message_chain(session,chain,hdr);
     if (rc != RTMP_OK) {
         rtmp_log(RTMP_LOG_ERR,"[%d]append response message failed!",
             session->sid);
@@ -404,10 +354,12 @@ void rtmp_send_ping_request(rtmp_session_t *session)
     uint32_t            timestamp;
     int32_t             rc;
     mem_buf_chain_t    *chain;
+    rtmp_chunk_header_t head;
 
     timestamp = rtmp_current_sec;
+    memset(&head, 0, sizeof(head));
 
-    chain = rtmp_create_ping_request(session,timestamp);
+    chain = rtmp_create_ping_request(session,timestamp,&head);
 
     if (chain == NULL) {
         rtmp_log(RTMP_LOG_ERR,"[%d]create ping request failed!",
@@ -415,7 +367,7 @@ void rtmp_send_ping_request(rtmp_session_t *session)
         return;
     }
 
-    rc = rtmp_append_message_chain(session,chain);
+    rc = rtmp_append_message_chain(session, chain, &head);
     if (rc != RTMP_OK) {
         rtmp_log(RTMP_LOG_ERR,"[%d]append request message failed!",
             session->sid);

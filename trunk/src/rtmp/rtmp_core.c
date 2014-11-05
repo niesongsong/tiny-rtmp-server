@@ -297,7 +297,7 @@ int32_t rtmp_core_handle_recv(rtmp_session_t *session)
                     session->sid,session->chunk_time,st->hdr.msgsid,
                     st->hdr.msgtid,st->hdr.msglen);
 
-                st->timestamp = session->chunk_time;
+                st->hdr.chunk_time = session->chunk_time;
                 rc = rtmp_core_handle_message(session,&st->hdr,st->chain);
 
                 if (rc != RTMP_OK) {
@@ -330,6 +330,7 @@ void rtmp_chain_send(rtmp_event_t *ev)
     int32_t              rc;
     uint32_t             out_rear,out_front;
     mem_buf_chain_t     *chain;
+    rtmp_message_t      *msg;
 
     conn = ev->data;
     session = conn->data;
@@ -357,7 +358,27 @@ void rtmp_chain_send(rtmp_event_t *ev)
                 return ;
             }
 
-            session->out_chunk = session->out_chain[out_rear];
+            msg = & session->out_message[out_rear];
+            rc = rtmp_send_buf(conn->fd,&msg->head,NULL);
+
+            if (rc == SOCK_ERROR) {
+                rtmp_log(RTMP_LOG_ERR,"[%d]send error:%p,%d",session->sid,rc);
+
+                return;
+            }
+
+            if (rc == SOCK_EAGAIN) {
+                rtmp_log(RTMP_LOG_DEBUG,"[%d]send again:%d",session->sid,rc);
+
+                if (!ev->active) {
+                    rtmp_event_add(ev,EVENT_WRITE);
+                }
+                rtmp_event_add_timer(ev,6000);
+
+                return ;
+            }
+
+            session->out_chunk = msg->chain;
             if (session->out_chunk == NULL) {
 
                 rtmp_log(RTMP_LOG_WARNING,"[%d]pick null message",
@@ -419,13 +440,13 @@ void rtmp_chain_send(rtmp_event_t *ev)
             }
         }
 
-        chain = session->out_chain[out_rear];
+        chain = session->out_message[out_rear].chain;
         
         rtmp_log(RTMP_LOG_INFO,"[%d]send a message",session->sid);
 
         rtmp_core_free_chain(session,session->chunk_pool,chain);
 
-        session->out_chain[out_rear] = NULL;
+        session->out_message[out_rear].chain = NULL;
         session->out_last = NULL;
 
         session->out_rear = (out_rear + 1) % session->out_queue; 
@@ -448,6 +469,7 @@ int32_t rtmp_core_handle_message(rtmp_session_t *session,
 
     handler = (rtmp_msg_handler_t**)cycle->msg_handler.elts;
     if (handler[chunk->msgtid]->pt) {
+        mem_reset_pool(session->temp_pool);
         return handler[chunk->msgtid]->pt(session,chunk,chain);
     }
 

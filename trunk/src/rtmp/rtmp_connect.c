@@ -240,9 +240,10 @@ static int32_t rtmp_connect_success_send(rtmp_session_t *session,
 static uint32_t rtmp_connect_amf_result(rtmp_session_t *session,
     rtmp_chunk_header_t *head)
 {
-    amf_data_t      *amf[4],*ecma;
-    mem_buf_t       *buf; 
-    mem_buf_chain_t *chain;
+    amf_data_t          *amf[4],*ecma;
+    mem_buf_t           *buf; 
+    mem_buf_chain_t     *chain;
+    rtmp_chunk_header_t  hdr;
 
     amf[0] = amf_new_string("_result",0);
     amf[1] = amf_new_number(1.0);
@@ -284,13 +285,17 @@ static uint32_t rtmp_connect_amf_result(rtmp_session_t *session,
         return RTMP_FAILED;
     }
 
-    chain = rtmp_prepare_memssage_buf(session,head,buf);
+    chain = rtmp_copy_buf_to_chain(session,buf);
     if (chain == NULL) {
         rtmp_log(RTMP_LOG_WARNING,"prepare connect app message failed!");
         return RTMP_FAILED;
     }
 
-    if (rtmp_append_message_chain(session,chain) == -1) {
+    hdr = *head;
+    hdr.msglen = buf->last - buf->buf;
+    hdr.fmt = 0;
+
+    if (rtmp_append_message_chain(session,chain,&hdr) == -1) {
         rtmp_log(RTMP_LOG_WARNING,"append connect app message failed!");
         return RTMP_FAILED;
     }
