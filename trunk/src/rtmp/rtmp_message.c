@@ -325,7 +325,7 @@ mem_buf_chain_t *rtmp_copy_chain_to_chain(rtmp_session_t *session,
 int32_t rtmp_append_message_chain(rtmp_session_t *session,
     mem_buf_chain_t *chain,rtmp_chunk_header_t *hdr)
 {
-    uint32_t            front,mlen=0;
+    uint32_t            front;
     rtmp_message_t     *msg;
     mem_buf_chain_t    *next;
     mem_buf_t           head;
@@ -359,9 +359,9 @@ int32_t rtmp_append_message_chain(rtmp_session_t *session,
     memcpy(msg->head.last,head.buf,head.last - head.buf);
     session->out_front = front;
 
-    while (chain->next) {
-        next = chain->next;
-
+    next = chain->next;
+    while (next) {
+        
         head.buf  = headbuf;
         head.last = headbuf;
         head.end  = headbuf + sizeof (headbuf);
@@ -372,6 +372,8 @@ int32_t rtmp_append_message_chain(rtmp_session_t *session,
 
         chain->chunk.last -= head.last - head.buf;
         memcpy(chain->chunk.last,head.buf,head.last - head.buf);
+
+        next = next->next;
     }
 
     msg->chain = chain;

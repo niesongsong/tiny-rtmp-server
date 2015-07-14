@@ -18,9 +18,45 @@
     <ClInclude Include="..\..\librtmp\include\librtmp.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\librtmp\librtmp_in.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\librtmp\rtmp_log.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\librtmp\rtmp_amf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\librtmp\rtmp_link.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\librtmp\rtmp_time.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\librtmp\rtmp_alloc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\librtmp\librtmp.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\librtmp\librtmp_dump.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\librtmp\rtmp_amf.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\librtmp\rtmp_link.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\librtmp\rtmp_log.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\librtmp\rtmp_time.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\librtmp\rtmp_alloc.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

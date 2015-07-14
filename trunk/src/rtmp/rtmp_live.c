@@ -24,6 +24,8 @@ static int32_t rtmp_live_send_avdata(rtmp_live_link_t *client,
     if (rtmp_append_message_chain(session,chain,hdr) != RTMP_OK) {
         rtmp_core_free_chains(session,session->chunk_pool,chain);
         rtmp_log(RTMP_LOG_DEBUG,"[%d] drop message",session->sid);
+
+        return RTMP_ERROR;
     }
     
     rtmp_core_lock_chains(chain);
